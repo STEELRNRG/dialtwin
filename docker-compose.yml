@@ -1,0 +1,17 @@
+# First build the dependency image once:  docker build -f Dockerfile.base -t dialtwin-base .
+# Then:                                     docker compose up -d --build
+services:
+  studio:
+    build: .
+    image: dialtwin
+    container_name: dialtwin
+    # Host networking lets adb find your watch over mDNS (Wireless debugging). Linux only;
+    # see the README for Docker Desktop on macOS/Windows.
+    network_mode: host
+    env_file: .env
+    volumes:
+      - ./jobs:/app/jobs            # one folder per face, with every agent's logs
+      - ./data:/app/data            # SQLite database, APK signing key, watch log
+      - ./adb:/root/.android        # watch pairing keys
+      - ./claude-home:/root/.claude # only used if you sign in with `claude login` inside the container
+    restart: unless-stopped

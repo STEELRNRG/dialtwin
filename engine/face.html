@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Watch face render</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  html, body { margin: 0; background: transparent; text-rendering: geometricPrecision; -webkit-font-smoothing: antialiased; }
+  body.frame { background: #000; }
+  #w { position: relative; width: 480px; height: 480px; }
+  #w.round { border-radius: 50%; overflow: hidden; }
+  #w > svg { position: absolute; inset: 0; }
+  #err { color: #f55; font: 14px monospace; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div id="w"></div>
+<pre id="err"></pre>
+<script>
+// Generic renderer for any face.js that follows engine/CONTRACT.md.
+// query: face=<file url of face.js>  v=<variant id>  layout=<layout id>  mode=active|aod  aod=<tint id>
+//        layer=all|plate|<hand id>   t=HH:MM:SS (fixed; omit = live)   a_<hand id>=<deg> (angle override)
+//        round=1 (circular crop)  frame=1 (black page)  live data for previews: battery=0-100 steps=0-100
+const q = new URLSearchParams(location.search);
+const done = () => { document.body.dataset.ready = '1'; };
+window.onerror = (m, s, l) => { document.getElementById('err').textContent += `${m} @${s}:${l}\n`; document.body.dataset.error = m; done(); };
+
+function loadScript(src) {
+  return new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => bad(new Error('cannot load ' + src)); document.head.appendChild(s); });
+}
+function loadCss(href) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; document.head.appendChild(l); }
+
+(async () => {
+  const faceUrl = q.get('face');
+  loadCss(faceUrl.replace(/face\.js(\?.*)?$/, 'fonts/fonts.css'));   // optional per-job fonts
+  await loadScript(faceUrl);
+  const M = WatchFace.manifest;
+  const variant = q.get('v') || M.variants[0].id;
+  const layout = q.get('layout') || M.layouts[0].id;
+  const mode = q.get('mode') || 'active';
+  const layer = q.get('layer') || 'all';
+  const F = WatchFace.build({ variant, layout, aod: q.get('aod') || M.aodTints[0].id });
+  const W = document.getElementById('w');
+  if (q.get('round') === '1') W.classList.add('round');
+  if (q.get('frame') === '1') document.body.classList.add('frame');
+  const aod = mode === 'aod';
+  const H = aod ? F.aodHands : F.hands;
+  const want = (n) => layer === 'all' || layer === n;
+
+  if (want('plate')) {
+    const host = document.createElement('div');
+    host.innerHTML = aod ? F.aod : F.plate;
+    W.appendChild(host.firstElementChild);
+  }
+  // live date digits (drawn by the watch from manifest.dateWindow; mirrored here for previews).
+  // dateWindow may be one window or a list; offset -1/0/+1 gives yesterday/today/tomorrow (date wheels).
+  const dws = M.dateWindow ? [].concat(M.dateWindow) : [];
+  const tint = q.get('aod') || M.aodTints[0].id;
+  if (layer === 'all' || layer === 'date') for (const dw of dws) {
+    if (aod && !(dw.aodColors && dw.aodColors[tint])) continue;
+    const d0 = new Date(); d0.setDate(d0.getDate() + (dw.offset || 0));
+    const pad = (dw.format || 'DAY_Z') === 'DAY_Z' && !dw.offset;
+    const fmt = pad ? String(d0.getDate()).padStart(2, '0') : String(d0.getDate());
+    const fam = (dw.font || 'Oxanium.ttf').replace(/\.ttf$/i, '').replace(/-.*$/, '');
+    let col = aod ? dw.aodColors[tint] : ((dw.colors && dw.colors[variant]) || dw.color || '#ffffffff');
+    if (/^#[0-9a-f]{8}$/i.test(col)) col = '#' + col.slice(3);  // #AARRGGBB -> #RRGGBB (preview ignores alpha)
+    const host = document.createElement('div');
+    host.innerHTML = F.svg(`<text x="${dw.x}" y="${dw.y}" font-family="'${fam}'" font-size="${dw.size}" fill="${col}" text-anchor="middle" dominant-baseline="central">${fmt}</text>`);
+    W.appendChild(host.firstElementChild);
+  }
+  const rot = {};
+  const list = aod ? M.hands.filter((h) => M.aodHands.includes(h.id)) : M.hands;
+  for (const h of list) {
+    if (!want(h.id) || !H[h.id]) continue;
+    const [px, py] = h.pivot || [0, 0];
+    const host = document.createElement('div');
+    host.innerHTML = F.svg(`<g transform="translate(${px} ${py})"><g class="rot">${H[h.id]}</g></g>`);
+    W.appendChild(host.firstElementChild);
+    rot[h.id] = { g: W.lastElementChild.querySelector('.rot'), kind: h.kind };
+  }
+
+  const single = layer !== 'all';
+  const num = (k, d) => (q.has(k) ? +q.get(k) : d);
+  function angle(kind, d) {
+    const s = d.getSeconds() + d.getMilliseconds() / 1000, m = d.getMinutes() + s / 60, h24 = d.getHours() + m / 60;
+    switch (kind) {
+      case 'hour': return (h24 % 12) * 30;
+      case 'minute': return m * 6;
+      case 'second': return Math.floor(s) * 6;
+      case 'chrono': return q.get('chrono') === 'sweep' ? s * 6 : 0;
+      case 'gmt24': return h24 * 15;
+      case 'battery': return Math.min(num('battery', 80), 99) * 3.6;
+      case 'steps': return Math.min(num('steps', 45), 99) * 3.6;
+      case 'weekday': return d.getDay() * (360 / 7);
+      default: return 0;
+    }
+  }
+  function now() {
+    const t = q.get('t');
+    if (!t) return new Date();
+    const [h, m, s] = t.split(':').map(Number); const d = new Date(); d.setHours(h, m, s || 0, 0); return d;
+  }
+  function set(d) {
+    for (const [id, r] of Object.entries(rot)) {
+      const a = single ? 0 : (q.has('a_' + id) ? +q.get('a_' + id) : angle(r.kind, d));
+      r.g.setAttribute('transform', `rotate(${a})`);
+    }
+  }
+  set(now());
+  if (!q.get('t')) (function tick() { set(new Date()); requestAnimationFrame(tick); })();
+  await document.fonts.ready;
+  done();
+})().catch((e) => { document.getElementById('err').textContent += e.stack || e; document.body.dataset.error = String(e); done(); });
+</script>
+</body>
+</html>

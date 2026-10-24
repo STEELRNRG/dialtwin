@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block body %}
+{% if msg %}<div class="msg">{{ msg }}</div>{% endif %}
+<div class="panel">
+  <h2>Your watch</h2>
+  <p class="muted">Installs go over wireless debugging. Pair once; after that you only need Wireless debugging switched on (and that screen open) when installing.</p>
+  <pre style="background:#0f1113;padding:10px;border-radius:8px;overflow:auto">{{ status }}</pre>
+  <p>Saved watch IP: <strong>{{ ip or 'not paired yet' }}</strong></p>
+  <form method="post" action="/watch/connect"><button class="ghost">Connect now</button></form>
+  <p class="muted" style="margin-top:12px"><strong>Tip:</strong> the watch turns its Wi-Fi down and stops announcing itself as soon as
+  the screen times out. Keep the Wireless debugging screen on (tap it every few seconds) until the install finishes, or set
+  Settings → Display → Screen timeout to 1 minute while installing. Connecting can take up to a minute.</p>
+  <h3>Connection log</h3>
+  <pre style="background:#0f1113;padding:10px;border-radius:8px;overflow:auto;max-height:320px;font-size:12px">{{ log }}</pre>
+  <p class="muted">Last address: {{ hostport or 'none yet' }}</p>
+</div>
+<div class="panel">
+  <h2>Pair a watch</h2>
+  <ol class="muted">
+    <li>Watch: Settings → About watch → Software information → tap <em>Software version</em> 5× (once).</li>
+    <li>Settings → Developer options → turn on <em>ADB debugging</em> and <em>Wireless debugging</em>.</li>
+    <li>Tap <em>Wireless debugging → Pair new device</em>, then enter the IP:port and code it shows.</li>
+  </ol>
+  <form method="post" action="/watch/pair" class="row">
+    <div><label class="muted">IP:port shown under "Pair new device"</label><input type="text" name="hostport" placeholder="192.168.1.50:37123" required></div>
+    <div style="flex:0 1 160px"><label class="muted">Pairing code</label><input type="text" name="code" required></div>
+    <div style="flex:0 0 auto"><button>Pair</button></div>
+  </form>
+</div>
+{% endblock %}

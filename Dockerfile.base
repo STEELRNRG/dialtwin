@@ -1,0 +1,30 @@
+# dialtwin-base: the heavy dependencies, rebuilt rarely.
+#   JDK 17 + Android build-tools 34 (aapt2, zipalign, apksigner) + adb
+#   Python (FastAPI, Pillow, xmlschema), Node 20 + Playwright Chromium, Claude Code CLI
+#   Google's Watch Face Format memory-footprint checker
+# Build: docker build -f Dockerfile.base -t dialtwin-base .
+FROM eclipse-temurin:17-jdk-jammy
+
+RUN apt-get update && apt-get install -y --no-install-recommends unzip curl zip ca-certificates gnupg python3 python3-pip && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV ANDROID_HOME=/opt/android
+RUN mkdir -p $ANDROID_HOME/cmdline-tools && cd /tmp && \
+    curl -sSLo t.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip && \
+    unzip -q t.zip -d $ANDROID_HOME/cmdline-tools && mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest && rm t.zip && \
+    yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null && \
+    $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0" "platforms;android-34" "platform-tools" >/dev/null && \
+    rm -rf $ANDROID_HOME/emulator
+ENV PATH=$PATH:/opt/android/build-tools/34.0.0:/opt/android/platform-tools
+
+RUN pip3 install --no-cache-dir fastapi "uvicorn[standard]" jinja2 python-multipart pillow xmlschema
+
+ARG CLAUDE_CODE_VERSION=latest
+ENV NODE_PATH=/usr/lib/node_modules
+RUN npm i -g playwright@1.47.2 @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} && npx playwright install --with-deps chromium
+
+# Apache-2.0, from https://github.com/google/watchface
+RUN mkdir -p /opt/tools && \
+    curl -fsSLo /opt/tools/memory-footprint.jar https://github.com/google/watchface/releases/download/release/memory-footprint.jar && \
+    curl -fsSLo /opt/tools/memory-footprint_LICENSE.txt https://github.com/google/watchface/releases/download/release/memory-footprint_LICENSE.txt

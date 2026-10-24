@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block head %}{% if jobs|selectattr('status','in',['running','queued'])|list %}<meta http-equiv="refresh" content="20">{% endif %}{% endblock %}
+{% block body %}
+<div class="panel">
+  <h2>New watch face</h2>
+  <form method="post" action="/jobs">
+    <div class="row">
+      <div style="flex:3 1 420px"><label class="muted">Watch product page URL</label>
+        <input type="url" name="url" required placeholder="https://www.brand.com/products/some-watch"></div>
+      <div style="flex:0 1 120px"><label class="muted">Max rounds</label>
+        <input type="number" name="rounds" value="5" min="1" max="10"></div>
+    </div>
+    <div style="margin-top:10px"><label class="muted">Notes (optional): e.g. "only the green dial", "keep the date window", "bigger hands"</label>
+      <textarea name="notes"></textarea></div>
+    <div style="margin-top:12px" class="row"><div><button>Build it</button>
+      <span class="muted" style="margin-left:10px">Takes roughly 30–90 minutes and 15–30M tokens. Notifications are sent if you set them up.</span></div></div>
+  </form>
+</div>
+
+<h2>Faces</h2>
+{% if not jobs %}<p class="muted">Nothing yet. Paste a watch page above.</p>{% endif %}
+<div class="grid">
+{% for j in jobs %}
+  <a class="card" href="/job/{{ j.id }}">
+    {% if j.thumb %}<img src="/job/{{ j.id }}/file/{{ j.thumb }}" alt="">{% else %}<img alt="">{% endif %}
+    <div class="body">
+      <div style="display:flex;justify-content:space-between;gap:8px"><strong>{{ j.name or 'New job #' ~ j.id }}</strong><span class="pill {{ j.status }}">{{ j.status }}</span></div>
+      <div class="muted">{{ j.stage or '' }}{% if j.round %} · round {{ j.round }}/{{ j.max_rounds }}{% endif %} · {{ j.updated|age }}</div>
+    </div>
+  </a>
+{% endfor %}
+</div>
+{% endblock %}

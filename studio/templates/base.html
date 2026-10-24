@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ app_name }}{% endblock %}</title>
+{% block head %}{% endblock %}
+<style>
+  :root { --bg:#0e0f11; --panel:#17191c; --line:#2a2d32; --ink:#e6e7e9; --dim:#9aa0a8; --acc:#ff7a2e; --ok:#58c47a; --bad:#ff5a52; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 system-ui, "Segoe UI", sans-serif; }
+  a { color:var(--acc); text-decoration:none; }
+  header { display:flex; align-items:center; gap:18px; padding:14px 22px; border-bottom:1px solid var(--line); }
+  header .brand { font-weight:700; letter-spacing:.3px; color:var(--ink); }
+  header .brand span { color:var(--acc); }
+  header nav { margin-left:auto; display:flex; gap:16px; font-size:14px; }
+  main { max-width:1180px; margin:0 auto; padding:22px 16px 60px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:18px; }
+  h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:17px; margin:0 0 12px; } h3 { font-size:15px; margin:14px 0 6px; }
+  input[type=text], input[type=url], input[type=number], textarea { width:100%; background:#0f1113; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font:inherit; }
+  textarea { min-height:70px; }
+  button, .btn { background:var(--acc); color:#140a02; border:0; border-radius:8px; padding:9px 16px; font:600 14px system-ui; cursor:pointer; display:inline-block; }
+  button.ghost, .btn.ghost { background:transparent; color:var(--ink); border:1px solid var(--line); }
+  button.danger { background:transparent; color:var(--bad); border:1px solid #4a2523; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:end; }
+  .row > * { flex:1 1 200px; }
+  .muted { color:var(--dim); font-size:13px; }
+  .pill { display:inline-block; padding:2px 10px; border-radius:99px; font-size:12px; font-weight:600; background:#262a30; color:var(--dim); }
+  .pill.running, .pill.queued { background:#3a2a12; color:#ffb36b; } .pill.review { background:#1d2a3d; color:#8ec5ff; } .pill.done { background:#173524; color:var(--ok); } .pill.failed { background:#3d1c1b; color:var(--bad); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:16px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; display:block; color:var(--ink); }
+  .card img { width:100%; aspect-ratio:1.9; object-fit:contain; background:#000; display:block; }
+  .card .body { padding:12px 14px; }
+  img.full { width:100%; border-radius:8px; border:1px solid var(--line); background:#000; }
+  table { border-collapse:collapse; width:100%; font-size:14px; } td, th { padding:6px 8px; border-bottom:1px solid var(--line); text-align:left; }
+  .ev { border-left:2px solid var(--line); padding:4px 0 14px 16px; margin-left:6px; }
+  .ev .t { font-size:12px; color:var(--dim); }
+  .ev.error { border-color:var(--bad); } .ev.round { border-color:var(--acc); } .ev.install { border-color:var(--ok); }
+  details summary { cursor:pointer; color:var(--dim); font-size:13px; }
+  ol.issues { padding-left:20px; margin:6px 0; } ol.issues li { margin-bottom:6px; font-size:14px; }
+  .score { font-weight:700; } .score.good { color:var(--ok); } .score.mid { color:#ffb36b; } .score.low { color:var(--bad); }
+  .msg { background:#1d2a1f; border:1px solid #2f4a33; padding:10px 14px; border-radius:8px; margin-bottom:16px; white-space:pre-wrap; }
+  @media (max-width:640px) { header { flex-wrap:wrap; } main { padding:16px; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">{{ app_name }}</a>
+  <nav><a href="/">Faces</a><a href="/ideas">Ideas</a><a href="/watch">Watch</a></nav>
+</header>
+<main>{% if not claude_auth() %}<div class="card" style="border-color:#c0392b;margin-bottom:16px"><b>No Claude access set up.</b> Jobs will fail until you add <code>ANTHROPIC_API_KEY</code> or <code>CLAUDE_CODE_OAUTH_TOKEN</code> to <code>.env</code> and restart. See the README.</div>{% endif %}{% block body %}{% endblock %}</main>
+</body>
+</html>

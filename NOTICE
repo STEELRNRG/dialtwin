@@ -1,0 +1,15 @@
+Dialtwin
+Licensed under the MIT License (see LICENSE), except for the third-party files below.
+
+engine/xsd/
+  Watch Face Format v2 XML schema. Copyright 2023 Samsung Electronics Co., Ltd and Google LLC.
+  Apache License 2.0. Source: https://github.com/google/watchface
+
+memory-footprint.jar (downloaded during the Docker build, not stored in this repository)
+  Copyright Google LLC. Apache License 2.0. Source: https://github.com/google/watchface
+
+engine/fonts/
+  From Google Fonts (https://fonts.google.com). Each font keeps its own license:
+  B612 Mono, Barlow Condensed, Bebas Neue, Cinzel, EB Garamond, Michroma, Orbitron, Oxanium,
+  Rajdhani, Saira, Share Tech Mono, Space Mono: SIL Open Font License 1.1.
+  Roboto Condensed: Apache License 2.0 / SIL Open Font License 1.1.

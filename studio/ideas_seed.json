@@ -1,0 +1,102 @@
+[
+  {
+    "title": "B-Uhr Type B navigator (FL 23883, 1941)",
+    "maker": "Luftwaffe spec: Laco, Stowa, Wempe, IWC, Lange",
+    "kind": "spec",
+    "url": "https://sammler-uhren.com/en/blogs/militaruhrengeschichte-und-infos/geschichte-der-b-uhren-der-reichsluftwaffe-baumuster-a-und-b",
+    "image": "https://sammler-uhren.com/cdn/shop/articles/geschichte-der-b-uhren-der-reichsluftwaffe-baumuster-a-und-b-3379714.jpg",
+    "why": "Huge outer minute ring (5–55), small inner hour ring, lume triangle at 12. Reads at a glance and the thin lume lines look superb in Always-On. The layout is a 1941 government spec, not a brand design.",
+    "brief": "Build the Type B (Baumuster B) layout only: outer Arabic minute ring 5–55 with 12 at top as a lume triangle with two dots, inner hour ring 1–12, blued sword hands with lume, matte black dial. No brand name or logo on the dial. Treat all photos on the page as style references for an original Type B face.",
+    "source": "https://6bwatches.com/type-a-vs-type-b-flieger-dials"
+  },
+  {
+    "title": "Dirty Dozen W.W.W. field watch (1945)",
+    "maker": "British Army spec: 12 Swiss makers",
+    "kind": "spec",
+    "url": "https://wornandwound.com/military-watches-of-the-world-the-dirty-dozen/",
+    "image": "https://wornandwound.com/library/uploads/2018/07/Dirty-Dozen-WWW-Group.jpg",
+    "why": "Black dial, railroad minute track, lume Arabic numerals, small seconds at 6: the archetypal field watch. Very legible and great in both Always-On colours. The look is set by a 1945 Army specification.",
+    "brief": "An original W.W.W.-pattern field dial: black, railroad minute track, lume Arabic numerals 1–12, small seconds subdial at 6 (map to the second hand), lume cathedral or syringe hands. Broad arrow at 12 is fine, no maker's name. Use the group photo as style reference.",
+    "source": "https://wornandwound.com/military-watches-of-the-world-the-dirty-dozen/"
+  },
+  {
+    "title": "US military field watch (A-11 / MIL-W-46374)",
+    "maker": "US military spec: Elgin, Waltham, Bulova, Hamilton, Benrus",
+    "kind": "spec",
+    "url": "https://en.wikipedia.org/wiki/US_military_watches",
+    "image": "",
+    "why": "The A-11 (1943) and MIL-W-46374 (1964) field dials: black or white, outer 12-hour and inner 24-hour rings, lume numerals, later ones with the H3 and radiation marks. A pure government pattern with no brand owner.",
+    "brief": "Original MIL-W-46374 style: matte black dial, white Arabic 1–12 with an inner 13–24 ring, lume dots on the minute track, white syringe hands, small 'H3' and radiation mark near 6 as period detail. No brand name.",
+    "source": "https://chronopedia.club/MIL-W-46374_Military_Watch"
+  },
+  {
+    "title": "Hamilton railroad pocket watch dial (c.1907)",
+    "maker": "Hamilton Watch Co. (Smithsonian, CC0)",
+    "kind": "archive",
+    "url": "https://americanhistory.si.edu/collections/object/nmah_1203403",
+    "image": "",
+    "why": "White enamel railroad dial: bold Arabic hours, a full minute numeral ring and blued hands. High contrast that looks superb on AMOLED, and the Smithsonian photo is public domain (CC0).",
+    "brief": "Recreate the white enamel railroad dial: bold black Arabic hours, outer minute numerals 1–60 (or the red five-minute Montgomery style if the photo shows it), small seconds at 6, blued spade hands. Keep the dial white; Always-On should invert to lume-style numerals on black.",
+    "source": "https://www.si.edu/openaccess/faq"
+  },
+  {
+    "title": "Marine chronometer dial (Science Museum)",
+    "maker": "Science Museum Group (CC BY)",
+    "kind": "archive",
+    "url": "https://collection.sciencemuseumgroup.org.uk/objects/co202306/chronometer",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Frodsham_chronometer_mechanism.jpg",
+    "why": "Roman or Arabic numerals, a large sub-seconds dial and a power-reserve sector up top. Instrument feel, and the museum photos are openly licensed.",
+    "brief": "Silvered or white chronometer dial: Roman numerals, large seconds subdial at 6 (second hand), 'UP/DOWN' power-reserve sector at 12 mapped to battery, blued hands. No maker's name needed.",
+    "source": "https://collection.sciencemuseumgroup.org.uk/search/objects/object_type/watch"
+  },
+  {
+    "title": "1930s sector dial (original design)",
+    "maker": "Genre, no owner",
+    "kind": "genre",
+    "url": "https://wornandwound.com/review/review-longines-heritage-sector/",
+    "image": "",
+    "why": "Concentric rings and a crosshair in two-tone silver, the hottest vintage style of the last few years. Clean geometry that renders perfectly as vectors.",
+    "brief": "Design an ORIGINAL sector dial in the 1930s manner, using the page photos only as style reference: two-tone silver and grey rings, crosshair, thin Arabic numerals, blued leaf hands, small seconds at 6. No brand names or logos anywhere.",
+    "source": "https://wornandwound.com/review/review-longines-heritage-sector/"
+  },
+  {
+    "title": "California dial (original design)",
+    "maker": "Genre, no owner",
+    "kind": "genre",
+    "url": "https://en.wikipedia.org/wiki/California_dial",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Radiomircalifornia.jpg",
+    "why": "Roman numerals on top, Arabic on the bottom, lume triangle at 12 and bars at 3, 6 and 9. Playful, instantly recognisable, and the big lume shapes glow well in Always-On.",
+    "brief": "Design an ORIGINAL California dial: black, large sandwich-style lume Roman numerals top half, Arabic bottom half, triangle at 12, bars at 3/6/9, simple lume baton hands. No brand names or logos; the Wikipedia photo is style reference only.",
+    "source": "https://en.wikipedia.org/wiki/California_dial"
+  },
+  {
+    "title": "Panda chronograph (original design)",
+    "maker": "Genre, no owner",
+    "kind": "genre",
+    "url": "https://teddybaldassarre.com/blogs/watches/panda-dial-watches",
+    "image": "",
+    "why": "White dial with black subdials (or the reverse). The engine already does live registers, so the subdials can show battery and steps, and a tachymeter ring frames it nicely.",
+    "brief": "Design an ORIGINAL panda chronograph: white dial, two or three black subdials (map to battery, steps and a parked chrono hand), outer tachymeter scale, black baton hands with lume. Use the page photos as style reference only; no brand names or logos.",
+    "source": "https://teddybaldassarre.com/blogs/watches/panda-dial-watches"
+  },
+  {
+    "title": "Regulator dial (original design)",
+    "maker": "Genre, from 18th-century precision clocks",
+    "kind": "genre",
+    "url": "https://monochrome-watches.com/the-evolution-of-the-regulator-watch-by-chronoswiss/",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/c1/Chronoswiss_Opus.JPG",
+    "why": "A single big central minute hand, hours in a subdial at 12 and seconds at 6. Unusual, very legible, and the engine's hand kinds map onto it directly.",
+    "brief": "Design an ORIGINAL regulator: central minute hand only, hour subdial at 12 (hour hand), seconds subdial at 6 (second hand), silvered dial with a railroad minute track, blued hands. Style reference only from the page; no brand names or logos.",
+    "source": "https://monochrome-watches.com/the-evolution-of-the-regulator-watch-by-chronoswiss/"
+  },
+  {
+    "title": "Three-pointer altimeter face",
+    "maker": "Aviation instrument, public domain drawing",
+    "kind": "genre",
+    "url": "https://en.wikipedia.org/wiki/Altimeter",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/3-Pointer_Altimeter.svg/960px-3-Pointer_Altimeter.svg.png",
+    "why": "Cockpit gauge typography, a 0–9 scale, three pointers of different lengths. Thin white lines on black look exactly right in Always-On and it is unlike any stock face.",
+    "brief": "An instrument-style face based on the three-pointer altimeter: black dial, white 0–9 numerals and fine tick scale, three pointers mapped to hour (short wide), minute (long) and second (thin with a counterweight), a small Kollsman-style window showing the date. No brand names.",
+    "source": "https://en.wikipedia.org/wiki/Altimeter"
+  }
+]

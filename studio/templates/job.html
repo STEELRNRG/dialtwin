@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}{{ j.name or 'Job ' ~ j.id }} · {{ app_name }}{% endblock %}
+{% block head %}{% if j.status in ['running','queued'] %}<meta http-equiv="refresh" content="15">{% endif %}{% endblock %}
+{% macro sc(v) %}{% set x = v|float %}<span class="score {{ 'good' if x >= 8 else ('mid' if x >= 7 else 'low') }}">{{ v }}</span>{% endmacro %}
+{% block body %}
+{% if msg %}<div class="msg">{{ msg }}</div>{% endif %}
+<div class="panel">
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <h1 style="margin:0">{{ j.name or 'Job #' ~ j.id }}</h1>
+    <span class="pill {{ j.status }}">{{ j.status }}</span>
+    <span class="muted">{{ j.stage }}{% if j.round %} · round {{ j.round }}/{{ j.max_rounds }}{% endif %}</span>
+  </div>
+  <div class="muted" style="margin-top:4px"><a href="{{ j.url }}" target="_blank" rel="noopener">{{ j.url }}</a>{% if j.notes %} · notes: {{ j.notes }}{% endif %} · {{ '{:,}'.format(j.tokens) }} tokens</div>
+  {% if j.message %}<p style="color:var(--bad)">{{ j.message }}</p>{% endif %}
+
+  <div class="row" style="margin-top:14px">
+    {% if has_apk %}
+    <div style="flex:0 0 auto"><form method="post" action="/job/{{ j.id }}/install" onsubmit="const b=this.querySelector('button');b.disabled=true;b.textContent='Installing… keep Wireless debugging open (up to a minute)';"><button>Install on my watch</button></form></div>
+    <div style="flex:0 0 auto"><a class="btn ghost" href="/job/{{ j.id }}/file/{{ j.apk }}">Download APK</a></div>
+    <div style="flex:0 0 auto"><form method="post" action="/job/{{ j.id }}/screenshot"><button class="ghost">Screenshot watch</button></form></div>
+    {% endif %}
+    {% if j.status in ['running','queued'] %}
+    <div style="flex:0 0 auto"><form method="post" action="/job/{{ j.id }}/stop"><button class="danger">Stop</button></form></div>
+    {% endif %}
+  </div>
+  {% if has_apk and not watch %}<p class="muted">To install, pair your watch once on the <a href="/watch">Watch</a> page.</p>{% endif %}
+</div>
+
+{% if j.status == 'review' %}
+<div class="panel" style="border-color:var(--acc)">
+  <h2>Check the reference photos before building</h2>
+  <p>This is what the builder will copy and what the critics will score against. Check it's the right watch, shot straight on,
+  and that the description gets hands and dial parts right.</p>
+  <img class="full" src="/job/{{ j.id }}/file/reference/strip.png?t={{ j.updated }}" alt="">
+  {% if brief %}<details style="margin-top:10px"><summary>Scout's description (what's a hand, what's the dial)</summary>
+    <pre style="white-space:pre-wrap;font-size:13px">{{ brief }}</pre></details>{% endif %}
+  <form method="post" action="/job/{{ j.id }}/approve" style="margin-top:14px"><button>Looks right, build it</button></form>
+  <h3>Or pick a better photo</h3>
+  <form method="post" action="/job/{{ j.id }}/rescout">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">
+    {% for s in sources %}
+      <label style="display:block;cursor:pointer;background:#0f1113;border:1px solid var(--line);border-radius:8px;padding:6px;text-align:center">
+        <img src="/job/{{ j.id }}/file/source/images/{{ s }}" style="width:100%;aspect-ratio:1;object-fit:contain" loading="lazy" alt="">
+        <input type="radio" name="image" value="{{ s }}"> <span class="muted">{{ s }}</span></label>
+    {% endfor %}
+    </div>
+    <textarea name="note" style="margin-top:10px" placeholder="Optional note for the scout, e.g. &quot;the bars at 1:30 and 10:30 are hands&quot; or &quot;use the lume shot for Always-On&quot;"></textarea>
+    <div style="margin-top:10px"><button class="ghost">Re-pick with this photo / note</button></div>
+  </form>
+</div>
+{% endif %}
+
+{% if j.status != 'review' and not j.round and sources %}
+<div class="panel">
+  <h2>Photos from the page ({{ sources|length }})</h2>
+  <p class="muted">The scout picks the reference from these; you'll get to check its pick before anything is built.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">
+  {% for s in sources %}
+    <a href="/job/{{ j.id }}/file/source/images/{{ s }}" target="_blank" style="display:block;background:#0f1113;border:1px solid var(--line);border-radius:8px;padding:6px">
+      <img src="/job/{{ j.id }}/file/source/images/{{ s }}" style="width:100%;aspect-ratio:1;object-fit:contain" loading="lazy" alt=""></a>
+  {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if j.status not in ['running','queued','review'] %}
+<div class="panel">
+  <h2>{{ 'Improve it' if j.round else 'Continue' }}</h2>
+  <form method="post" action="/job/{{ j.id }}/continue">
+    <textarea name="feedback" placeholder="What should change? e.g. &quot;hands should be thicker&quot;, &quot;the red is too orange&quot;, &quot;add the date window&quot;. Leave empty to just run more rounds."></textarea>
+    <div class="row" style="margin-top:10px">
+      <div style="flex:0 1 160px"><label class="muted">More rounds (0 = just rebuild APK)</label><input type="number" name="rounds" value="2" min="0" max="6"></div>
+      <div style="flex:0 0 auto"><button>Go</button></div>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+{% if scores %}
+<div class="panel">
+  <h2>Scores by round</h2>
+  <table>
+    <tr><th>Round</th>{% for v in variants %}<th>{{ v.label }}: looks like the real one</th><th>ready to wear</th>{% endfor %}</tr>
+    {% for r, s in scores|dictsort %}
+    <tr><td>{{ r }}</td>{% for v in variants %}<td>{{ sc(s.fidelity.get(v.id, '–')) }}</td><td>{{ sc(s.platform.get(v.id, '–')) }}</td>{% endfor %}</tr>
+    {% endfor %}
+  </table>
+  <p class="muted">Target: 8+ on looks and 7.5+ on wearability. 8 = an owner of the real watch would recognise it instantly.</p>
+</div>
+{% endif %}
+
+{% if latest %}
+<div class="panel">
+  <h2>Latest round</h2>
+  <img class="full" src="/job/{{ j.id }}/file/{{ latest }}/sheet.png?t={{ j.updated }}" alt="">
+  {% if variants %}
+  <h3>Structure check</h3>
+  <p class="muted">Left: the dial with no hands. Nothing here should look like a hand. Right: the face at 4:38, where every hand should have moved from the photo's pose.</p>
+  <div class="grid">{% for v in variants %}
+    <img class="full" src="/job/{{ j.id }}/file/{{ latest }}/{{ v.id }}_plate.png?t={{ j.updated }}" alt="" onerror="this.remove()">
+    <img class="full" src="/job/{{ j.id }}/file/{{ latest }}/{{ v.id }}_alt.png?t={{ j.updated }}" alt="" onerror="this.remove()">
+  {% endfor %}</div>
+  <h3>Always-on</h3>
+  <div class="grid">{% for v in variants %}{% for t in ['red','green'] %}
+    <img class="full" src="/job/{{ j.id }}/file/{{ latest }}/{{ v.id }}_aod_{{ t }}.png?t={{ j.updated }}" alt="" onerror="this.remove()">
+  {% endfor %}{% endfor %}</div>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="panel">
+  <h2>Timeline</h2>
+  {% for e in events|reverse %}
+  <div class="ev {{ e.kind }}">
+    <div class="t">{{ e.ts|age }} · {{ e.kind }}</div>
+    {% if e.kind == 'critique' %}
+      {% set d = e.data %}
+      <div><strong>Round {{ d.round }} reviews</strong></div>
+      {% for who, c in [('Looks vs the real watch', d.fidelity), ('Ready to wear', d.platform)] %}
+      <div style="margin-top:6px">{{ who }}: {% for k, v in (c.scores or {}).items() %}{{ k }} {{ sc(v) }}{% if not loop.last %} · {% endif %}{% endfor %}</div>
+      <div class="muted">{{ c.summary }}</div>
+      {% if c.issues %}<details><summary>{{ c.issues|length }} issues</summary><ol class="issues">
+        {% for i in c.issues %}<li><strong>{{ i.element }}</strong>: {{ i.problem }} <span class="muted">→ {{ i.fix }}</span></li>{% endfor %}
+      </ol></details>{% endif %}
+      {% endfor %}
+    {% else %}
+      <div style="white-space:pre-wrap">{{ e.text }}</div>
+      {% if e.image %}<img class="full" style="margin-top:8px;max-width:900px" src="/job/{{ j.id }}/file/{{ e.image }}" alt="" loading="lazy">{% endif %}
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<form method="post" action="/job/{{ j.id }}/delete" onsubmit="return confirm('Delete this job and all its files?')"><button class="danger">Delete job</button></form>
+{% endblock %}

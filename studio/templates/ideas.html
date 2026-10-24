@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Ideas · {{ app_name }}{% endblock %}
+{% block head %}{% if scanning %}<meta http-equiv="refresh" content="30">{% endif %}
+<style>
+  .idea { display:flex; flex-direction:column; }
+  .idea .img { aspect-ratio:1.6; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden; border-bottom:1px solid var(--line); }
+  .idea .img img { width:100%; height:100%; object-fit:cover; display:block; }
+  .idea .img .ph { color:#3a3f47; font:600 13px system-ui; letter-spacing:.1em; text-transform:uppercase; }
+  .idea .body { padding:12px 14px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .idea .why { font-size:13.5px; color:#cfcbc0; }
+  .idea .acts { display:flex; gap:8px; align-items:center; margin-top:auto; padding-top:8px; flex-wrap:wrap; }
+  .idea .acts form { display:inline; }
+  .idea .acts input[type=number] { width:58px; padding:6px 8px; }
+  .pill.spec { background:#1f2a1a; color:#9fd48a; } .pill.archive { background:#2a2418; color:#e2c17a; } .pill.genre { background:#1d2535; color:#9cc4ff; }
+  .pill.new { background:#3a2a12; color:#ffb36b; } .pill.screen { background:#33182f; color:#ff9ae0; }
+  .scanbar { display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+</style>{% endblock %}
+{% block body %}
+{% if msg %}<div class="msg">{{ msg }}</div>{% endif %}
+<div class="panel">
+  <div class="scanbar">
+    <div><h1 style="margin:0">Ideas</h1>
+      <div class="muted">Candidates to build. Approve one and it becomes a normal job: photos fetched, reference checked by you, then built.
+        {% if scan_at %}A scout runs every morning at {{ '%02d:%02d' % scan_at }} for new releases and watches seen on screen.{% else %}Press the button to have a scout look for new releases and watches seen on screen (about 3M tokens a scan). Set <code>IDEAS_DAILY=1</code> to run it every morning.{% endif %}</div></div>
+    <form method="post" action="/ideas/scan" style="margin-left:auto"><button class="ghost" {% if scanning %}disabled{% endif %}>{{ 'Scanning…' if scanning else 'Find new watches now' }}</button></form>
+  </div>
+  <div class="muted" style="margin-top:8px">{% if last_scan %}Last scan {{ last_scan|age }}: {{ last_result }}{% else %}No scan yet.{% endif %}{% if scanning %} · a scan is running (this page refreshes){% endif %}</div>
+</div>
+
+{% macro card(i) %}
+  <div class="card idea">
+    <div class="img">{% if i.image %}<img src="{{ i.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.innerHTML='<span class=ph>{{ i.kind }}</span>'">{% else %}<span class="ph">{{ i.kind }}</span>{% endif %}</div>
+    <div class="body">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><strong>{{ i.title }}</strong><span class="pill {{ i.kind }}">{{ i.kind }}</span></div>
+      {% if i.maker %}<div class="muted">{{ i.maker }}</div>{% endif %}
+      <div class="why">{{ i.why }}</div>
+      {% if i.brief %}<details><summary>Notes the builder will get</summary><div class="muted" style="margin-top:4px">{{ i.brief }}</div></details>{% endif %}
+      <div class="muted"><a href="{{ i.url }}" target="_blank" rel="noopener">page</a>{% if i.source and i.source != i.url %} · <a href="{{ i.source }}" target="_blank" rel="noopener">source</a>{% endif %} · {{ i.created|age }}</div>
+      <div class="acts">
+        {% if i.status == 'new' %}
+        <form method="post" action="/ideas/{{ i.id }}/build"><input type="number" name="rounds" value="5" min="1" max="10" title="max rounds"> <button>Build it</button></form>
+        <form method="post" action="/ideas/{{ i.id }}/skip"><button class="ghost">Skip</button></form>
+        {% elif i.status == 'approved' %}
+        <a class="btn ghost" href="/job/{{ i.job_id }}">Open job #{{ i.job_id }}</a>
+        {% else %}
+        <form method="post" action="/ideas/{{ i.id }}/restore"><button class="ghost">Put back</button></form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endmacro %}
+
+<h2>New this week <span class="muted" style="font-weight:400">· releases and on screen</span></h2>
+{% if not fresh %}<p class="muted">Nothing found yet. Press "Find new watches now" or wait for the morning scan.</p>{% endif %}
+<div class="grid">{% for i in fresh %}{{ card(i) }}{% endfor %}</div>
+
+<h2 style="margin-top:28px">Starter shortlist <span class="muted" style="font-weight:400">· specs, archives and original designs with no brand owner</span></h2>
+<div class="grid">{% for i in shortlist %}{{ card(i) }}{% endfor %}</div>
+
+{% if done %}
+<h2 style="margin-top:28px">Approved</h2>
+<div class="grid">{% for i in done %}{{ card(i) }}{% endfor %}</div>
+{% endif %}
+{% if skipped %}
+<details style="margin-top:28px"><summary>Skipped ({{ skipped|length }})</summary>
+<div class="grid" style="margin-top:12px">{% for i in skipped %}{{ card(i) }}{% endfor %}</div></details>
+{% endif %}
+{% endblock %}
