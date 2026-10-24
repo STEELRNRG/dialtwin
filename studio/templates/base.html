@@ -48,6 +48,6 @@
   <a class="brand" href="/">{{ app_name }}</a>
   <nav><a href="/">Faces</a><a href="/ideas">Ideas</a><a href="/watch">Watch</a></nav>
 </header>
-<main>{% if not claude_auth() %}<div class="card" style="border-color:#c0392b;margin-bottom:16px"><b>No Claude access set up.</b> Jobs will fail until you add <code>ANTHROPIC_API_KEY</code> or <code>CLAUDE_CODE_OAUTH_TOKEN</code> to <code>.env</code> and restart. See the README.</div>{% endif %}{% block body %}{% endblock %}</main>
+<main>{% if not claude_auth() %}<div class="card" style="border-color:#c0392b;margin-bottom:16px"><b>No Claude subscription set up.</b> Jobs will fail until you run <code>claude setup-token</code> with a Claude Pro or Max plan, put it in <code>.env</code> as <code>CLAUDE_CODE_OAUTH_TOKEN</code> and restart. See the README.</div>{% endif %}{% if api_key_ignored() %}<div class="card" style="border-color:#d68910;margin-bottom:16px"><b>API key ignored.</b> Dialtwin only runs on a Claude subscription, so <code>ANTHROPIC_API_KEY</code> in <code>.env</code> is never used. You can remove it.</div>{% endif %}{% block body %}{% endblock %}</main>
 </body>
 </html>

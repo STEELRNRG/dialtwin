@@ -17,19 +17,26 @@ pays for your tokens.
 - A Linux machine with Docker (a home server or a Raspberry Pi 5 is fine). On macOS or Windows see
   [Docker Desktop](#docker-desktop-macos-windows).
 - A round **Wear OS** watch: Galaxy Watch 4 or newer, Pixel Watch, or others with Wear OS 4+.
-- Claude access: an [Anthropic API key](https://console.anthropic.com) (recommended), or a token
-  from your own Claude subscription (run `claude setup-token` with
-  [Claude Code](https://docs.claude.com/en/docs/claude-code) installed), used within Anthropic's terms.
+- A **Claude Pro or Max subscription**. Run `claude setup-token` with
+  [Claude Code](https://docs.claude.com/en/docs/claude-code) installed and paste the token into `.env`.
+  Use it for yourself, within Anthropic's terms.
 
 ### What it costs
-A face takes 30–90 minutes and roughly **15–30 million tokens**, most of them cheap cache reads.
-With an API key, check current pricing before your first run. `MAX_TOKENS_PER_JOB` (default 40M)
-stops a job before it runs away, and every job page shows the tokens it used.
+Nothing extra: Dialtwin only runs on your Claude subscription and **does not accept API keys**.
+A face takes 30–90 minutes and roughly **15–30 million tokens**, most of them cache reads. At API
+prices that would be around US$20 a face, so per-token billing is switched off on purpose.
+
+The tokens count towards your plan's usage limits:
+- **Max** is recommended.
+- **Pro** works, but a job may hit the usage limit partway through. Once the limit resets, press
+  **Continue** on the job page to carry on.
+
+`MAX_TOKENS_PER_JOB` (default 40M) stops a runaway job, and every job page shows the tokens it used.
 
 ## Quick start
 ```bash
 git clone https://github.com/STEELRNRG/dialtwin.git && cd dialtwin
-cp .env.example .env          # add ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN
+cp .env.example .env          # add CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`)
 docker build -f Dockerfile.base -t dialtwin-base .    # once; downloads the Android tools (~15 min)
 docker compose up -d --build
 ```
@@ -83,7 +90,7 @@ and nothing it makes leaves your machine unless you send it somewhere.
 - **Respect websites' terms.** Dialtwin fetches the page you give it, like your browser does. Don't
   point it at sites that forbid automated access, and don't use it to collect images in bulk.
 - **Your Claude account, your responsibility.** Your use of Claude is under Anthropic's terms.
-  An API key is the recommended way to run it.
+  Dialtwin runs on your own subscription, for your own use.
 - **No warranty.** Dialtwin is provided as-is under the MIT licence. You're responsible for how you
   use it and what you make with it. This section is not legal advice.
 
@@ -98,7 +105,7 @@ All settings live in `.env`; see [.env.example](.env.example).
 
 | Setting | Default | What it does |
 |---|---|---|
-| `ANTHROPIC_API_KEY` / `CLAUDE_CODE_OAUTH_TOKEN` | | Claude access (one of them) |
+| `CLAUDE_CODE_OAUTH_TOKEN` | | Your Claude subscription token (`claude setup-token`). API keys are ignored |
 | `MAX_TOKENS_PER_JOB` | 40000000 | Stop a job past this many tokens (0 = no limit) |
 | `HOST` / `PORT` | 127.0.0.1 / 8097 | Where the UI listens |
 | `STUDIO_URL` | http://localhost:8097 | Your address for the UI, used in notification links |

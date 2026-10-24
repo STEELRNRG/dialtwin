@@ -1,7 +1,8 @@
 # Dialtwin
 
 Paste a watch product-page URL; Claude agents (scout, builder, two critics) build a Wear OS Watch Face
-Format v2 face and package an APK. Self-hosted in Docker, bring-your-own Claude key. Public docs:
+Format v2 face and package an APK. Self-hosted in Docker, runs on the user's own Claude subscription only (API keys are stripped
+from the agents' env on purpose: ~$20/face at API prices). Public docs:
 README.md. Machine-specific deploy notes, if any, live in CLAUDE.local.md (git-ignored).
 
 ## Layout
