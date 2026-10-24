@@ -1,7 +1,7 @@
 [
   {
     "title": "B-Uhr Type B navigator (FL 23883, 1941)",
-    "maker": "Luftwaffe spec: Laco, Stowa, Wempe, IWC, Lange",
+    "maker": "1940s German navigator spec (several makers)",
     "kind": "spec",
     "url": "https://sammler-uhren.com/en/blogs/militaruhrengeschichte-und-infos/geschichte-der-b-uhren-der-reichsluftwaffe-baumuster-a-und-b",
     "image": "https://sammler-uhren.com/cdn/shop/articles/geschichte-der-b-uhren-der-reichsluftwaffe-baumuster-a-und-b-3379714.jpg",
@@ -21,7 +21,7 @@
   },
   {
     "title": "US military field watch (A-11 / MIL-W-46374)",
-    "maker": "US military spec: Elgin, Waltham, Bulova, Hamilton, Benrus",
+    "maker": "US military spec (several makers)",
     "kind": "spec",
     "url": "https://en.wikipedia.org/wiki/US_military_watches",
     "image": "",
@@ -30,8 +30,8 @@
     "source": "https://chronopedia.club/MIL-W-46374_Military_Watch"
   },
   {
-    "title": "Hamilton railroad pocket watch dial (c.1907)",
-    "maker": "Hamilton Watch Co. (Smithsonian, CC0)",
+    "title": "Railroad pocket watch dial (c.1907)",
+    "maker": "Smithsonian collection (CC0)",
     "kind": "archive",
     "url": "https://americanhistory.si.edu/collections/object/nmah_1203403",
     "image": "",

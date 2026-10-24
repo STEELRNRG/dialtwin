@@ -81,8 +81,8 @@ const words = slug.toLowerCase().split(/[-_]+/).filter((w) => w.length > 2);
 const score = (u) => words.filter((w) => u.toLowerCase().includes(w)).length;
 found.images.sort((a, b) => score(b.url) - score(a.url));
 const candidates = found.images.filter((i) => !/\.svg(\?|$)/i.test(i.url) && (i.w === 0 || i.w >= 400 || i.h >= 400));
-// download from inside the page first: bot-protected CDNs (Akamai on omegawatches.com) tarpit
-// Playwright's APIRequestContext until it times out, but serve the browser's own fetch() instantly
+// download from inside the page first: some image CDNs stall Playwright's APIRequestContext
+// but answer the page's own fetch() normally
 const inPage = async (u) => {
   const res = await page.evaluate(async (u) => {
     const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 20000);

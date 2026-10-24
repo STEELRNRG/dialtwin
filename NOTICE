@@ -3,13 +3,11 @@ Licensed under the MIT License (see LICENSE), except for the third-party files b
 
 engine/xsd/
   Watch Face Format v2 XML schema. Copyright 2023 Samsung Electronics Co., Ltd and Google LLC.
-  Apache License 2.0. Source: https://github.com/google/watchface
+  Apache License 2.0 (engine/xsd/LICENSE-APACHE-2.0.txt). Source: https://github.com/google/watchface
 
 memory-footprint.jar (downloaded during the Docker build, not stored in this repository)
   Copyright Google LLC. Apache License 2.0. Source: https://github.com/google/watchface
 
 engine/fonts/
-  From Google Fonts (https://fonts.google.com). Each font keeps its own license:
-  B612 Mono, Barlow Condensed, Bebas Neue, Cinzel, EB Garamond, Michroma, Orbitron, Oxanium,
-  Rajdhani, Saira, Share Tech Mono, Space Mono: SIL Open Font License 1.1.
-  Roboto Condensed: Apache License 2.0 / SIL Open Font License 1.1.
+  From Google Fonts (https://fonts.google.com), all under the SIL Open Font License 1.1.
+  Each font's license text and copyright notice is in engine/fonts/licenses/.

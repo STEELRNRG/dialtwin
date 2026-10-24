@@ -1,6 +1,6 @@
 # Dialtwin
 
-Paste a link to a watch, get a working watch face for your Wear OS smartwatch.
+Paste a link to a watch you own, get a matching watch face for your Wear OS smartwatch, for your own wrist.
 
 Dialtwin fetches the product page and lets a team of Claude agents do the rest. A scout picks
 the best dial photo and measures it. A builder draws the dial as code. Two critics score each
@@ -17,9 +17,9 @@ pays for your tokens.
 - A Linux machine with Docker (a home server or a Raspberry Pi 5 is fine). On macOS or Windows see
   [Docker Desktop](#docker-desktop-macos-windows).
 - A round **Wear OS** watch: Galaxy Watch 4 or newer, Pixel Watch, or others with Wear OS 4+.
-- Claude access: an [Anthropic API key](https://console.anthropic.com), or your own Claude
-  subscription (run `claude setup-token` with [Claude Code](https://docs.claude.com/en/docs/claude-code)
-  installed and copy the token).
+- Claude access: an [Anthropic API key](https://console.anthropic.com) (recommended), or a token
+  from your own Claude subscription (run `claude setup-token` with
+  [Claude Code](https://docs.claude.com/en/docs/claude-code) installed), used within Anthropic's terms.
 
 ### What it costs
 A face takes 30–90 minutes and roughly **15–30 million tokens**, most of them cheap cache reads.
@@ -69,14 +69,29 @@ Every face gets watch settings for colourway, layout (full dial or painted bezel
 colour (green lume or red night vision), and live or parked registers (battery and steps) when
 the dial has subdials.
 
-## Brands, logos and what you may share
-By default (`KEEP_BRANDING=0`) faces **leave out brand names, logos and model names**. The
-dial's layout, hands and colours are recreated, but the maker's marks are not.
+## Legal: please read
+Dialtwin is a tool that runs on your own computer. It doesn't host, sell or share watch faces,
+and nothing it makes leaves your machine unless you send it somewhere.
 
-Watch designs and logos belong to their makers. Use this for faces of watches you own, on your
-own wrist. Don't publish, sell or share faces of other people's designs. Watch companies do send
-legal notices over smartwatch copies, and Google Play removes them. `KEEP_BRANDING=1` exists
-for private use only, at your own risk.
+- **Faces leave out brand names, logos and model names.** The agents are told to recreate the
+  dial's layout, hands and colours and to leave every maker's mark off.
+- **Watch designs belong to their makers.** Make faces of watches you own, for your own wrist.
+  **Don't publish, sell, upload or share faces of other companies' designs**, on Google Play,
+  Facer or anywhere else. Watch brands enforce their rights against smartwatch copies: Swatch
+  Group won a UK case against Samsung over watch faces in its store, and Cartier sued Apple over
+  look-alike watch apps. If you want to share a face, design an original one.
+- **Respect websites' terms.** Dialtwin fetches the page you give it, like your browser does. Don't
+  point it at sites that forbid automated access, and don't use it to collect images in bulk.
+- **Your Claude account, your responsibility.** Your use of Claude is under Anthropic's terms.
+  An API key is the recommended way to run it.
+- **No warranty.** Dialtwin is provided as-is under the MIT licence. You're responsible for how you
+  use it and what you make with it. This section is not legal advice.
+
+**Brand owners:** if anything in this repository concerns you, please
+[open an issue](https://github.com/STEELRNRG/dialtwin/issues) and it will be dealt with promptly.
+
+Dialtwin isn't affiliated with or endorsed by Google, Samsung, Anthropic or any watch company.
+"Wear OS" is a trademark of Google LLC. Other names belong to their owners.
 
 ## Settings
 All settings live in `.env`; see [.env.example](.env.example).
@@ -88,7 +103,6 @@ All settings live in `.env`; see [.env.example](.env.example).
 | `HOST` / `PORT` | 127.0.0.1 / 8097 | Where the UI listens |
 | `STUDIO_URL` | http://localhost:8097 | Your address for the UI, used in notification links |
 | `PACKAGE_PREFIX` | com.dialtwin.face | Android package prefix; keep it fixed so rebuilds update in place |
-| `KEEP_BRANDING` | 0 | 1 = copy logos and brand text too (private use only) |
 | `IDEAS_DAILY` | 0 | 1 = run the ideas scout every morning (~3M tokens a run) |
 | `NOTIFY_URL` | | POST a notification here, e.g. `https://ntfy.sh/<your-topic>` |
 | `HA_URL`, `HA_TOKEN`, `HA_NOTIFY_TARGETS` | | Home Assistant notifications instead of, or as well as, ntfy |
@@ -137,6 +151,5 @@ Dialtwin is free and MIT-licensed. If it made you a face you love, you can
 - Watch Face Format schema: © Samsung Electronics and Google, Apache 2.0.
 - Memory-footprint checker: [google/watchface](https://github.com/google/watchface), Apache 2.0
   (downloaded during the Docker build).
-- Fonts: Google Fonts, SIL Open Font License 1.1 / Apache 2.0. See [NOTICE](NOTICE).
+- Fonts: Google Fonts, SIL Open Font License 1.1 (licence texts in `engine/fonts/licenses/`). See [NOTICE](NOTICE).
 
-Not affiliated with Google, Samsung or any watch brand. "Wear OS" is a trademark of Google LLC.
