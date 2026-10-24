@@ -29,19 +29,15 @@ MAX_TOKENS_PER_JOB = int(os.environ.get('MAX_TOKENS_PER_JOB', '15000000') or 0)
 
 
 def claude_auth():
-    """How the Claude CLI will sign in, or '' if there is no subscription to use. API keys don't count:
-    Dialtwin runs on a Claude Pro/Max subscription only and never bills per token."""
+    """How the Claude CLI will sign in, or '' if it has nothing to use."""
+    if os.environ.get('ANTHROPIC_API_KEY'):
+        return 'API key'
     if os.environ.get('CLAUDE_CODE_OAUTH_TOKEN'):
-        return 'Claude subscription token'
+        return 'Claude account token'
     creds = Path.home() / '.claude' / '.credentials.json'
     try:
-        if 'claudeAiOauth' in json.loads(creds.read_text(encoding='utf-8')):
+        if json.loads(creds.read_text(encoding='utf-8')):
             return 'Claude login'
     except (OSError, ValueError):
         pass
     return ''
-
-
-def api_key_ignored():
-    """True when an API key is set in .env. It is ignored; the UI says so."""
-    return bool(os.environ.get('ANTHROPIC_API_KEY') or os.environ.get('ANTHROPIC_AUTH_TOKEN'))

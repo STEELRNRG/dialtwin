@@ -1,6 +1,6 @@
-"""Runs one agent as a headless `claude -p` session. Dialtwin runs on a Claude subscription only: the CLI
-signs in with CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`) or a subscription `claude login` saved in
-~/.claude. API keys are removed from the agents' environment so a job can never bill per token. Agent prompts live in studio/agents/<name>.md with a small frontmatter:
+"""Runs one agent as a headless `claude -p` session with the unmodified Claude Code CLI. It signs in however
+the user set it up: their own ANTHROPIC_API_KEY, or their own Claude account via `claude auth login` (saved in
+~/.claude). Dialtwin never handles sign-in itself and doesn't restrict any of the CLI's sign-in methods. Agent prompts live in studio/agents/<name>.md with a small frontmatter:
 
 ---
 model: opus
@@ -16,9 +16,6 @@ import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-
-# Credentials that would bill per token. Dialtwin is subscription-only, so these never reach the CLI.
-API_BILLING_VARS = ('ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN')
 
 AGENTS = Path(__file__).resolve().parent / 'agents'
 DISALLOWED = ['WebSearch', 'Task', 'Agent', 'NotebookEdit', 'TodoWrite']
@@ -62,10 +59,9 @@ def run(name: str, prompt: str, cwd: Path, log_prefix: Path) -> Result:
         '--no-session-persistence',
     ]
     env = dict(os.environ, IS_SANDBOX='1')
-    for k in API_BILLING_VARS:      # subscription only: never let the CLI fall back to per-token billing
-        env.pop(k, None)
-    if not env.get('CLAUDE_CODE_OAUTH_TOKEN'):   # an empty line in .env must not shadow a saved login
-        env.pop('CLAUDE_CODE_OAUTH_TOKEN', None)
+    for k in ('ANTHROPIC_API_KEY', 'CLAUDE_CODE_OAUTH_TOKEN'):
+        if not env.get(k):          # an empty line in .env must not shadow another sign-in method
+            env.pop(k, None)
     try:
         p = subprocess.run(cmd, input=prompt, capture_output=True, text=True, cwd=cwd, env=env,
                            timeout=int(meta.get('timeout_min', '40')) * 60, encoding='utf-8', errors='replace')

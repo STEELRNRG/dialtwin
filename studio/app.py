@@ -37,7 +37,6 @@ T.env.filters['age'] = _fmt_age
 T.env.filters['fromjson'] = lambda s: json.loads(s or '{}')
 T.env.globals['app_name'] = config.APP_NAME
 T.env.globals['claude_auth'] = config.claude_auth
-T.env.globals['api_key_ignored'] = config.api_key_ignored
 
 
 def _thumb(j):

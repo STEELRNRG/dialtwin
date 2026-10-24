@@ -17,30 +17,37 @@ pays for your tokens.
 - A Linux machine with Docker (a home server or a Raspberry Pi 5 is fine). On macOS or Windows see
   [Docker Desktop](#docker-desktop-macos-windows).
 - A round **Wear OS** watch: Galaxy Watch 4 or newer, Pixel Watch, or others with Wear OS 4+.
-- A **Claude Pro or Max subscription**. Run `claude setup-token` with
-  [Claude Code](https://docs.claude.com/en/docs/claude-code) installed and paste the token into `.env`.
-  Use it for yourself, within Anthropic's terms.
+- Your own Claude access, either:
+  - your **Claude account** (a Pro or Max plan). You sign in once with Anthropic's own sign-in,
+    inside the container (see Quick start), or
+  - your own **Anthropic API key** from [Claude Console](https://platform.claude.com/), billed per token.
+
+  Dialtwin runs the official, unmodified [Claude Code](https://code.claude.com/docs) CLI and never
+  sees or stores your password. Use it for yourself, within Anthropic's terms.
 
 ### What it costs
-Nothing extra: Dialtwin only runs on your Claude subscription and **does not accept API keys**.
-A face takes 30–90 minutes and roughly **1 million tokens per round**, usually 1–4 rounds. Most of
-them are cache reads. Per-token billing is switched off on purpose.
+A face takes 30–90 minutes and roughly **1 million tokens per round**, usually 2–6 rounds. Most of
+them are cache reads.
 
-The tokens count towards your plan's usage limits:
-- **Max** is recommended.
-- **Pro** works, but a job may hit the usage limit partway through. Once the limit resets, press
-  **Continue** on the job page to carry on.
+- **With an API key:** two test faces cost about US$5–7 each at API prices in October 2026. Check
+  current pricing before your first run.
+- **With a Claude plan:** nothing extra, but the tokens count towards your plan's usage limits:
+  - **Max** is recommended.
+  - **Pro** works, but a job may hit the usage limit partway through. Once the limit resets, press
+    **Continue** on the job page to carry on.
 
 `MAX_TOKENS_PER_JOB` (default 15M) stops a runaway job, and every job page shows the tokens it used.
 
 ## Quick start
 ```bash
 git clone https://github.com/STEELRNRG/dialtwin.git && cd dialtwin
-cp .env.example .env          # add CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`)
+cp .env.example .env          # API key users: add ANTHROPIC_API_KEY here
 docker build -f Dockerfile.base -t dialtwin-base .    # once; downloads the Android tools (~15 min)
 docker compose up -d --build
+docker compose exec -it dialtwin claude auth login    # Claude plan users: sign in once
 ```
-Open http://localhost:8097.
+`claude auth login` is Anthropic's own sign-in: it shows a link to open in your browser. The login is
+kept in `./claude-home` so it survives rebuilds. Open http://localhost:8097.
 
 The UI has **no login**. It listens on localhost only unless you set `HOST=0.0.0.0` in `.env`.
 Only do that on a network you trust, and never expose it to the internet.
@@ -90,7 +97,7 @@ and nothing it makes leaves your machine unless you send it somewhere.
 - **Respect websites' terms.** Dialtwin fetches the page you give it, like your browser does. Don't
   point it at sites that forbid automated access, and don't use it to collect images in bulk.
 - **Your Claude account, your responsibility.** Your use of Claude is under Anthropic's terms.
-  Dialtwin runs on your own subscription, for your own use.
+  Dialtwin runs on your own Claude account or API key, for your own use.
 - **No warranty.** Dialtwin is provided as-is under the MIT licence. You're responsible for how you
   use it and what you make with it. This section is not legal advice.
 
@@ -105,7 +112,7 @@ All settings live in `.env`; see [.env.example](.env.example).
 
 | Setting | Default | What it does |
 |---|---|---|
-| `CLAUDE_CODE_OAUTH_TOKEN` | | Your Claude subscription token (`claude setup-token`). API keys are ignored |
+| `ANTHROPIC_API_KEY` | | Your own API key (optional: or sign in with `claude auth login` instead) |
 | `MAX_TOKENS_PER_JOB` | 15000000 | Stop a job past this many tokens (0 = no limit) |
 | `HOST` / `PORT` | 127.0.0.1 / 8097 | Where the UI listens |
 | `STUDIO_URL` | http://localhost:8097 | Your address for the UI, used in notification links |
@@ -149,10 +156,6 @@ Runtime folders (git-ignored): `jobs/` (one folder per face, including every age
 
 Try the engine without Claude: copy `engine/examples/fieldchrono/face.js` into an empty folder and
 run `node /app/engine/render.mjs r1` there inside the container.
-
-## Support the project
-Dialtwin is free and MIT-licensed. If it made you a face you love, you can
-[sponsor it on GitHub](https://github.com/sponsors/STEELRNRG).
 
 ## Credits
 - Watch Face Format schema: © Samsung Electronics and Google, Apache 2.0.

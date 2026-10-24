@@ -1,8 +1,9 @@
 # Dialtwin
 
 Paste a watch product-page URL; Claude agents (scout, builder, two critics) build a Wear OS Watch Face
-Format v2 face and package an APK. Self-hosted in Docker, runs on the user's own Claude subscription only (API keys are stripped
-from the agents' env on purpose). Public docs:
+Format v2 face and package an APK. Self-hosted in Docker. Runs the unmodified Claude Code CLI with the user's own sign-in (`claude auth
+login`, or their own ANTHROPIC_API_KEY). Don't strip or restrict CLI sign-in methods and don't handle
+users' Claude credentials: Anthropic's Claude Code terms forbid both. Public docs:
 README.md. Machine-specific deploy notes, if any, live in CLAUDE.local.md (git-ignored).
 
 ## Layout
