@@ -64,7 +64,7 @@ power-save Wi-Fi as soon as the screen sleeps, and then they can't be found. The
      ([contract](engine/CONTRACT.md)).
    - A **fidelity critic** (Opus) compares the render with the photo.
    - A **watch critic** (Sonnet) checks legibility, Always-On power use and packaging risks.
-   - Stops at fidelity ≥ 8 and wearability ≥ 7.5, or when the scores stop improving.
+   - Stops at fidelity ≥ 8 and wearability ≥ 8.5, or when the scores stop improving.
 4. **Package**: layers → Watch Face Format v2 XML, validated against the official schema →
    signed APK → Google's memory-footprint check.
 5. **Install** over wireless adb.

@@ -17,7 +17,7 @@ from . import claude, config, db, notify
 JOBS = Path('/app/jobs')
 ENGINE = Path('/app/engine')
 PASS_FIDELITY = 8.0
-PASS_PLATFORM = 7.5
+PASS_PLATFORM = 8.5   # rounds are ~1M tokens now, so keep polishing wearability (was 7.5)
 
 
 class Stopped(Exception):
@@ -178,14 +178,23 @@ def stage_rounds(j, d):
         if f_min >= PASS_FIDELITY and p_min >= PASS_PLATFORM:
             db.event(jid, 'stage', f'Round {rnd_no} passed (fidelity {f_min}, watch {p_min}).')
             break
-        if f.get('diminishing_returns') and f_min >= 7.5 and p_min >= 7.0:
+        # fidelity has plateaued: stop only once wearability has also reached its bar
+        if f.get('diminishing_returns') and f_min >= 7.5 and p_min >= PASS_PLATFORM:
             db.event(jid, 'stage', f'Critics report diminishing returns at round {rnd_no}; stopping here.')
             break
-        # stall: no fidelity gain over two rounds
-        hist = [min(map(float, s['fidelity'].values() or [0])) for k, s in sorted(scores.items(), key=lambda kv: int(kv[0][1:]))]
+        # stall: no gain over two rounds in the combined score that also picks the best round
+        hist = [combined(s) for k, s in sorted(scores.items(), key=lambda kv: int(kv[0][1:]))]
         if len(hist) >= 3 and hist[-1] <= hist[-3]:
-            db.event(jid, 'stage', f'No improvement over two rounds ({hist[-3]} → {hist[-1]}); stopping.')
+            db.event(jid, 'stage', f'No improvement over two rounds ({hist[-3]:.2f} → {hist[-1]:.2f}, '
+                                   f'fidelity + half watch score); stopping.')
             break
+
+
+def combined(s):
+    """One number per round: min fidelity + half the min watch score."""
+    f = min(map(float, s['fidelity'].values() or [0]))
+    p = min(map(float, s['platform'].values() or [0]))
+    return f + 0.5 * p
 
 
 def pick_best_round(jid, d):
@@ -193,9 +202,7 @@ def pick_best_round(jid, d):
     scores = json.loads(db.job(jid)['scores'] or '{}')
     best, best_val = None, -1.0
     for rnd, s in sorted(scores.items(), key=lambda kv: int(kv[0][1:])):
-        f = min(map(float, s['fidelity'].values() or [0]))
-        p = min(map(float, s['platform'].values() or [0]))
-        val = f + 0.5 * p
+        val = combined(s)
         if val >= best_val and (d / 'out' / rnd / 'face.js').exists():
             best, best_val = rnd, val
     if best and (d / 'out' / best / 'face.js').read_bytes() != (d / 'face.js').read_bytes():

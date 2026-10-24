@@ -22,7 +22,7 @@ Engine only, outside Docker: in a folder with a face.js, `PLAYWRIGHT_DIR=<dir wi
 - Never commit `.env`, `jobs/`, `data/`, `adb/`, `claude-home/`. Example faces and screenshots must be
   original designs: no brand dials anywhere in the repo.
 - Default is `KEEP_BRANDING=0`: pipeline.py adds NO_BRANDING to the scout, builder and fidelity prompts.
-- Pass rule: fidelity >= 8 and watch >= 7.5; packaging picks the best-scoring round. Jobs pause at
+- Pass rule: fidelity >= 8 and watch >= 8.5 (raised from 7.5 once rounds got ~5x cheaper); packaging picks the best-scoring round. Jobs pause at
   `review` after the scout for the user to check the reference photos.
 - Critics run a STRUCTURE CHECK on `_plate.png`/`_alt.png`: painted-in hands cap the score at 5. Keep real
   hand lengths (platform.md HARD RULE).
