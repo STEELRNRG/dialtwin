@@ -46,7 +46,9 @@ images, first build a contact sheet with PIL (thumbnails + filenames drawn on) a
    - Hands: each hand's shape, length (radius), width, colours, lume, counterweights.
    - Complications (subdials, date, GMT, power reserve…): position, radius, scale, and a proposed
      mapping to engine hand kinds (hour, minute, second, chrono, gmt24, battery, steps, weekday,
-     static) or "bake at rest". Include the date window if present.
+     dayOfMonth, static) or "bake at rest". Include the date window if present. A date shown by a
+     bead, lit hole or jumping marker at 31 spots maps to `dayOfMonth`: give the 31 spot positions
+     (or the rule that generates them) and the day the photo shows.
    - Colour palette per variant as hex values **sampled with PIL** from the photo (dial, indices,
      text, accents, hands, bezel).
    - The photo's hand pose: time shown and any extra hand angles (for `photoPose`).

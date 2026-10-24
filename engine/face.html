@@ -21,6 +21,7 @@
 // query: face=<file url of face.js>  v=<variant id>  layout=<layout id>  mode=active|aod  aod=<tint id>
 //        layer=all|plate|<hand id>   t=HH:MM:SS (fixed; omit = live)   a_<hand id>=<deg> (angle override)
 //        round=1 (circular crop)  frame=1 (black page)  live data for previews: battery=0-100 steps=0-100
+//        day=1-31 (day of the month for date windows and dayOfMonth markers; omit = today)
 const q = new URLSearchParams(location.search);
 const done = () => { document.body.dataset.ready = '1'; };
 window.onerror = (m, s, l) => { document.getElementById('err').textContent += `${m} @${s}:${l}\n`; document.body.dataset.error = m; done(); };
@@ -46,6 +47,7 @@ function loadCss(href) { const l = document.createElement('link'); l.rel = 'styl
   const aod = mode === 'aod';
   const H = aod ? F.aodHands : F.hands;
   const want = (n) => layer === 'all' || layer === n;
+  const single = layer !== 'all';
 
   if (want('plate')) {
     const host = document.createElement('div');
@@ -55,10 +57,13 @@ function loadCss(href) { const l = document.createElement('link'); l.rel = 'styl
   // live date digits (drawn by the watch from manifest.dateWindow; mirrored here for previews).
   // dateWindow may be one window or a list; offset -1/0/+1 gives yesterday/today/tomorrow (date wheels).
   const dws = M.dateWindow ? [].concat(M.dateWindow) : [];
+  // fixed day for previews: January has 31 days, so every day 1-31 exists
+  const today = () => (q.has('day') ? new Date(2026, 0, Math.min(31, Math.max(1, +q.get('day')))) : new Date());
+  const dayOfMonth = today().getDate();
   const tint = q.get('aod') || M.aodTints[0].id;
   if (layer === 'all' || layer === 'date') for (const dw of dws) {
     if (aod && !(dw.aodColors && dw.aodColors[tint])) continue;
-    const d0 = new Date(); d0.setDate(d0.getDate() + (dw.offset || 0));
+    const d0 = today(); d0.setDate(d0.getDate() + (dw.offset || 0));
     const pad = (dw.format || 'DAY_Z') === 'DAY_Z' && !dw.offset;
     const fmt = pad ? String(d0.getDate()).padStart(2, '0') : String(d0.getDate());
     const fam = (dw.font || 'Oxanium.ttf').replace(/\.ttf$/i, '').replace(/-.*$/, '');
@@ -74,12 +79,17 @@ function loadCss(href) { const l = document.createElement('link'); l.rel = 'styl
     if (!want(h.id) || !H[h.id]) continue;
     const [px, py] = h.pivot || [0, 0];
     const host = document.createElement('div');
-    host.innerHTML = F.svg(`<g transform="translate(${px} ${py})"><g class="rot">${H[h.id]}</g></g>`);
+    host.innerHTML = F.svg(`<g class="pos" transform="translate(${px} ${py})"><g class="rot">${H[h.id]}</g></g>`);
     W.appendChild(host.firstElementChild);
     rot[h.id] = { g: W.lastElementChild.querySelector('.rot'), kind: h.kind };
+    // dayOfMonth: the marker jumps to positions[day - 1] (optionally turned by angles[day - 1])
+    if (h.kind === 'dayOfMonth' && !single) {
+      const [x, y] = h.positions[dayOfMonth - 1];
+      W.lastElementChild.querySelector('.pos').setAttribute('transform', `translate(${x} ${y})`);
+      rot[h.id].fixed = (h.angles && h.angles[dayOfMonth - 1]) || 0;
+    }
   }
 
-  const single = layer !== 'all';
   const num = (k, d) => (q.has(k) ? +q.get(k) : d);
   function angle(kind, d) {
     const s = d.getSeconds() + d.getMilliseconds() / 1000, m = d.getMinutes() + s / 60, h24 = d.getHours() + m / 60;
@@ -102,7 +112,7 @@ function loadCss(href) { const l = document.createElement('link'); l.rel = 'styl
   }
   function set(d) {
     for (const [id, r] of Object.entries(rot)) {
-      const a = single ? 0 : (q.has('a_' + id) ? +q.get('a_' + id) : angle(r.kind, d));
+      const a = single ? 0 : (q.has('a_' + id) ? +q.get('a_' + id) : r.fixed !== undefined ? r.fixed : angle(r.kind, d));
       r.g.setAttribute('transform', `rotate(${a})`);
     }
   }

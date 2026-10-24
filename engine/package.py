@@ -13,6 +13,8 @@ Hand kinds (manifest.hands[].kind):
   battery, steps        register hands: config "Registers" live data / at rest (0..99% -> 0..356 deg)
   weekday               day-of-week hand (Sunday at 0 deg, 7 steps)
   static                never moves (hubs, caps, parked hands)
+  dayOfMonth            marker that jumps to positions[DAY - 1] (31 [x, y] in dial units, optional
+                        angles[DAY - 1]): date beads, lit date holes, jumping date pointers
 Optional manifest.dateWindow = {x, y, w, h, size, color, font: 'File.ttf', format: 'DAY_Z'} in dial units.
 """
 import argparse
@@ -77,8 +79,10 @@ class X:
     def group(self, name):
         self.open(f'<Group name="{name}" x="0" y="0" width="480" height="480">')
 
-    def image(self, m, res, angle=None, ambient_only=False):
+    def image(self, m, res, angle=None, ambient_only=False, fixed_angle=0):
         a = ' alpha="0"' if ambient_only else ''
+        if fixed_angle:
+            a += f' angle="{round(fixed_angle, 2)}"'
         self.open(f'<PartImage x="{m["x"]}" y="{m["y"]}" width="{m["w"]}" height="{m["h"]}" '
                   f'pivotX="{m["px"]}" pivotY="{m["py"]}"{a}>')
         if angle:
@@ -104,6 +108,22 @@ class X:
         else:
             self.add(f'<{tag} {attrs}/>')
         self.close('</AnalogClock>')
+
+    def day_marker(self, m, res, hand, scale, ambient_only=False):
+        """dayOfMonth: one copy of the marker image per day, the Condition shows only today's."""
+        angles = hand.get('angles') or [0] * 31
+        self.open('<Condition>')
+        self.open('<Expressions>')
+        for d in range(1, 32):
+            self.add(f'<Expression name="day{d}">[DAY] == {d}</Expression>')
+        self.close('</Expressions>')
+        for d, (dx, dy) in enumerate(hand['positions'], start=1):
+            # m is the crop around the canvas centre; shift it so its pivot lands on this day's spot
+            at = dict(m, x=round(m['x'] + dx * scale), y=round(m['y'] + dy * scale))
+            self.open(f'<Compare expression="day{d}">')
+            self.image(at, res, ambient_only=ambient_only, fixed_angle=angles[d - 1])
+            self.close('</Compare>')
+        self.close('</Condition>')
 
     def option_switch(self, config_id, options):
         """options: list of (option_id, callback) -> ListConfiguration with one Group per option."""
@@ -216,6 +236,8 @@ def main():
                 x.image(m, r, GMT)
             elif k == 'weekday':
                 x.image(m, r, WEEKDAY)
+            elif k == 'dayOfMonth':
+                x.day_marker(m, r, h, meta['scales'][lay])
             else:
                 x.image(m, r)
         x.close('</Group>')
@@ -255,6 +277,8 @@ def main():
                         x.image(m, r, GMT, ambient_only=True)
                     elif k == 'weekday':
                         x.image(m, r, WEEKDAY, ambient_only=True)
+                    elif k == 'dayOfMonth':
+                        x.day_marker(m, r, h, meta['scales'][lay], ambient_only=True)
                     elif k in ('static',):
                         x.image(m, r, ambient_only=True)
             return fn

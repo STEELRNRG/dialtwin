@@ -26,6 +26,15 @@ export async function loadManifest() {
   for (const k of ['variants', 'layouts', 'aodTints', 'hands', 'aodHands']) {
     if (!Array.isArray(M[k]) || !M[k].length) throw new Error(`manifest.${k} must be a non-empty array`);
   }
+  for (const h of M.hands) {
+    if (h.kind !== 'dayOfMonth') continue;
+    const ok = (a, n) => Array.isArray(a) && a.length === 31 && a.every((v) => n(v));
+    if (!ok(h.positions, (p) => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite))) {
+      throw new Error(`hand ${h.id}: dayOfMonth needs positions: 31 [x, y] pairs (day 1 first)`);
+    }
+    if (h.angles !== undefined && !ok(h.angles, Number.isFinite)) throw new Error(`hand ${h.id}: angles must be 31 numbers`);
+    if (h.pivot) throw new Error(`hand ${h.id}: dayOfMonth uses positions, not pivot (draw the marker around 0,0)`);
+  }
   return M;
 }
 

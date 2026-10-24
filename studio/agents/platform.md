@@ -26,6 +26,9 @@ Check:
   is already measured in `metrics.md`; use those numbers. Must be ≤ 15 %, ideally 8–12 %. No seconds. Static elements dimmer
   than hands. Recognisably the same watch. Both tints use the same geometry.
 - Default layout fills the screen sensibly; nothing important clipped at the edge.
+- Date: a date bead, lit date hole or date marker painted into the plate (it would be wrong on 30 of
+  31 days) is rank-1; the fix is a `dayOfMonth` hand (CONTRACT.md), so it is NOT an engine limit.
+  Check `_alt.png` shows it on a different day from `<v>.png`.
 - manifest sanity: hand kinds map complications sensibly, aodHands has no seconds, pivots match
   the drawn subdial centres, photoPose plausible, ids lowercase.
 - HARD RULE: hands passing over dial text, logos, subdials or the date window at some times of day
@@ -46,7 +49,7 @@ Check:
   copy that wears as well as the real watch; 9 = that, with an Always-On design that's clear and in
   the 8-12 % band.
 - Engine limits: if a problem can only be fixed with an engine feature that CONTRACT.md doesn't have
-  (e.g. a marker that should follow the day of the month), put it in `engine_limits`, not `issues`,
+  (e.g. a moon-phase disc or a retrograde hand that flies back), put it in `engine_limits`, not `issues`,
   and don't score it down. The builder can't fix it, and repeating it wastes rounds.
 - Anything likely to fail WFF packaging (hands not drawn around their pivot, moving parts baked into the
   plate, raster images).

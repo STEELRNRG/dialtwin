@@ -35,6 +35,8 @@ track, numerals, text/logo, bezel and colours (metrics.md has the main colours).
 crop or colour sample (under `scratch/`, several in one script) only where the sheets aren't enough. Ignore photo-only effects (glare, reflections,
 crystal, perspective, lighting depth that a flat face cannot have). Live elements (date digits,
 running hands) will legitimately differ from the photo's frozen values; judge their style, not their value.
+A date bead / lit date hole should be a `dayOfMonth` hand: in `<v>.png` it sits on the photo's day
+(`photoPose.day`) and must be on another day in `_alt.png`; if it's also in `_plate.png` it is baked in (rank-1).
 
 If `reference/ref_<v>_lume.png` exists, also compare `out/<round>/<v>_aod_*.png` against it (which parts
 glow, their shapes); Always-On problems belong in your issues too.

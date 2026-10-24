@@ -46,6 +46,8 @@ Read first (in one turn):
 - Match colours by sampling the reference with PIL.
 - Hands: shape, length and width matter most at wrist distance, then indices, then text, then texture.
 - The default `dial` layout fills the screen (see CONTRACT rule 5).
+- Every date element must be live: digits via `dateWindow`, a bead / lit hole / jumping marker at
+  31 spots via a `dayOfMonth` hand (set `photoPose.day` to the photo's date). Never bake a date into the plate.
 - Keep the real watch's hand lengths and widths even though hands pass over the date or text
   at times; that's normal and critics are told so. Ignore any advice to shorten hands for it.
 - Never write outside the job folder except `scratch/`. Don't edit `reference/` or `critiques/`.

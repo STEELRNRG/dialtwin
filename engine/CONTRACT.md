@@ -30,7 +30,7 @@ The worked example is `engine/examples/fieldchrono/face.js`: read it before writ
 | `aodTints` | `[{id, label}]`: always provide `red` (night vision) and `green` (lume) unless the watch's lume colour suggests otherwise; first = default |
 | `hands` | paint order bottom→top: `{id, kind, pivot?: [x, y] (dial units), sweep?}` |
 | `aodHands` | ids of hands shown in Always-On (no seconds!) |
-| `photoPose` | `{time: 'HH:MM:SS', angles: {handId: deg}}`: hand pose matching the product photo |
+| `photoPose` | `{time: 'HH:MM:SS', angles: {handId: deg}, day?: 1-31}`: hand pose matching the product photo; `day` = the date the photo shows (photo renders use it for date windows and `dayOfMonth` markers; `_alt` uses another day) |
 | `previewTime` | time shown in the watch's picker, default `'10:09:30'` |
 | `dateWindow` | optional `{x, y, w, h, size, color, colors: {variant: '#AARRGGBB'}, font: 'Oxanium.ttf', format: 'DAY_Z', offset: 0}` (dial units, box centre x,y), or a **list** of them. `offset` -1/0/+1 = yesterday/today/tomorrow, for rolling date wheels (never bake date numbers into the plate). Add `aodColors: {red: '#AARRGGBB', green: '#AARRGGBB'}` to show that digit (dimmed) in Always-On too, which you should do for the main date. The plate draws the window frame; the engine draws the live digits |
 
@@ -38,10 +38,28 @@ The worked example is `engine/examples/fieldchrono/face.js`: read it before writ
 `hour`, `minute` (system hands) · `second` (running seconds, `sweep: '2'|'5'|'10'|'15'|'SYNC_TO_DEVICE'|'tick'`)
 · `chrono` (central chrono hand, parked at 12 or sweeping via a watch setting) · `gmt24` (24 h hand)
 · `battery`, `steps` (register hands showing live data 0–99 % → 0–356°, or at rest) · `weekday`
+· `dayOfMonth` (a marker that **jumps** to one of 31 fixed spots, see below)
 · `static` (hub caps, fixed ornaments that must sit above the hands).
 Map real complications to the nearest kind: e.g. a chronograph's 30-minute register → `steps`,
 12-hour register → `battery`, small seconds → `second`, second time zone → `gmt24`.
 A register you cannot map sensibly: bake it into the plate at rest.
+
+### `dayOfMonth`: date beads, lit date holes, jumping date pointers
+For a date shown by *where* something sits rather than by digits or a rotating hand (a bead in one of
+31 holes on a spiral, a lit numeral on a printed date ring, a pointer that jumps between irregular spots):
+```js
+hands: [{ id: 'bead', kind: 'dayOfMonth', positions: [[x1, y1], /* ... */ [x31, y31]], angles: [/* optional, 31 deg */] }, ...]
+```
+- `positions`: exactly 31 `[x, y]` in dial units, day 1 first. No `pivot`.
+- `hands.bead` is the marker drawn **centred on (0,0)**; the engine moves it to `positions[day - 1]`
+  and, with `angles`, turns it by `angles[day - 1]` (clock degrees, e.g. to keep a pointer aimed outward).
+- To "light" a printed numeral, draw the lit numeral as the marker (it covers the plate's unlit one);
+  for numerals at different angles, the marker must look right at every listed angle.
+- Put it first in `hands` (under the time hands). It is usually the main date, so also list it in
+  `aodHands` with a dimmed Always-On marker.
+- Never bake the marker into the plate at a fixed day: it would be wrong 30 days out of 31.
+- On the watch it is a WFF `<Condition>` on `[DAY]` with one placed copy of the same image per day;
+  previews use the `day=` query (render.mjs passes `photoPose.day` for photo renders).
 
 ## build() return value
 - `plate`: full static dial for `variant` + `layout`, **no moving hands**.

@@ -20,16 +20,20 @@ const { b, shot, html } = await browser();
 const pose = M.photoPose || { time: '10:09:30' };
 const poseAngles = Object.fromEntries(Object.entries(pose.angles || {}).map(([k, v]) => ['a_' + k, String(v)]));
 const photoLayout = M.photoLayout || M.layouts[0].id;
+// day of the month: the photo's (photoPose.day) for photo renders, another one for the alt check,
+// today's for the on-watch and Always-On renders (as the watch would show)
+const photoDay = pose.day ? { day: String(pose.day) } : {};
+const altDay = { day: String(((pose.day || 22) + 8) % 31 + 1) };
 const url = (f) => pathToFileURL(f).href;
 
 for (const v of M.variants) {
   const base = { v: v.id, round: '1', frame: '1' };
-  await shot({ ...base, layout: photoLayout, t: pose.time, ...poseAngles }, path.join(out, `${v.id}.png`));
+  await shot({ ...base, layout: photoLayout, t: pose.time, ...photoDay, ...poseAngles }, path.join(out, `${v.id}.png`));
   await shot({ ...base, layout: M.layouts[0].id, t: M.previewTime || '10:09:30' }, path.join(out, `${v.id}_onwatch.png`));
   // structure checks: the plate alone (anything hand-like here is a bug) and a different time
   // (everything that is a hand in the photo must have moved)
   await shot({ ...base, layout: photoLayout, layer: 'plate', t: pose.time }, path.join(out, `${v.id}_plate.png`));
-  await shot({ ...base, layout: photoLayout, t: '04:38:47' }, path.join(out, `${v.id}_alt.png`));
+  await shot({ ...base, layout: photoLayout, t: '04:38:47', ...altDay }, path.join(out, `${v.id}_alt.png`));
   for (const tint of M.aodTints) {
     await shot({ ...base, layout: M.layouts[0].id, mode: 'aod', aod: tint.id, t: M.previewTime || '10:09:30' }, path.join(out, `${v.id}_aod_${tint.id}.png`));
   }
