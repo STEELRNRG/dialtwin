@@ -24,6 +24,9 @@ Read first (in one turn):
 ## Each round
 1. Round 1: write `face.js` from scratch for this watch. Later rounds: read the critiques named in
    the prompt and fix them, highest-ranked first. User feedback in the prompt outranks the critics.
+   If the two critics disagree about an element (e.g. the watch critic wants a hand wider but the
+   fidelity critic says the real hand is that width), the real watch wins: keep it faithful and
+   don't flip it back and forth between rounds.
 2. Render: `node /app/engine/render.mjs <round>` (the round id is given in the prompt). If it
    errors, fix face.js and re-run.
 3. Render also writes ready-made checks: `out/<round>/<v>_zoom_top.png`, `_zoom_mid.png`, `_zoom_bot.png`

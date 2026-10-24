@@ -32,6 +32,22 @@ Check:
   is NORMAL for every analog watch, including the real one. Never list it as an issue, never score
   it down, and never recommend shortening, narrowing or re-routing hands to avoid it. Hand
   proportions come from the real watch.
+- HARD RULE: the real watch's design is not a defect. Read `reference/brief.md` and look at
+  `reference/ref_<v>.png`. Anything the render copies faithfully from the real watch (near-equal hands,
+  sparse or tiny markers, dark or high-contrast cut-outs, minimalist registers, a decorative dot, no
+  numerals) is the design the owner chose. Don't list it as an issue, don't score it down, and never
+  recommend changing it. The screen is about the size of a real dial (~38 mm vs 36-42 mm), so a
+  detail that is small or subtle on the real watch is equally small on the wrist: that is the design,
+  not a defect. TEST every issue before you list it: "would this also be true of the real watch on the
+  wrist?" If yes, leave it out. Judge only what this render does worse than the real watch (a detail
+  drawn thinner, dimmer or lower in contrast than on the real dial), plus the Always-On, structure and
+  packaging rules here. In Always-On, follow the real watch's lume where the lume shot shows it, and
+  otherwise keep its proportions (e.g. near-equal real hands stay near-equal). Score: 8 = a faithful
+  copy that wears as well as the real watch; 9 = that, with an Always-On design that's clear and in
+  the 8-12 % band.
+- Engine limits: if a problem can only be fixed with an engine feature that CONTRACT.md doesn't have
+  (e.g. a marker that should follow the day of the month), put it in `engine_limits`, not `issues`,
+  and don't score it down. The builder can't fix it, and repeating it wastes rounds.
 - Anything likely to fail WFF packaging (hands not drawn around their pivot, moving parts baked into the
   plate, raster images).
 
@@ -41,6 +57,7 @@ Write `critiques/<round>_platform.json`:
  "summary": "2-3 sentences",
  "aod_lit_percent": {"<variant>_<tint>": 9.8},
  "issues": [{"rank": 1, "variant": "all", "element": "...", "problem": "...", "fix": "concrete face.js change", "wrist_visible": true}],
+ "engine_limits": ["what the engine can't do yet and how it affects the face"],
  "keep": ["..."]}
 ```
 Up to 10 issues. Score = ready to wear (8 = would happily wear it daily). Finish with one line: the scores.
