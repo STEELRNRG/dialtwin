@@ -5,9 +5,11 @@
 //   out/r1/<v>_onwatch.png  default layout at preview time (what the watch shows)
 //   out/r1/<v>_aod_<tint>.png
 //   out/r1/sheet.png        all variants: reference row over render row (shown on the job page)
+//   then analyse.py adds <v>_zoom_{top,mid,bot}.png, <v>_wrist.png and metrics.md (see that file)
 import path from 'path';
 import fs from 'fs';
-import { pathToFileURL } from 'url';
+import { pathToFileURL, fileURLToPath } from 'url';
+import { execFileSync } from 'child_process';
 import { JOB, loadManifest, browser } from './lib.mjs';
 
 const round = process.argv[2] || 'r1';
@@ -56,4 +58,8 @@ await html(`<body style="margin:0;background:#111;display:flex;gap:18px;padding:
 path.join(out, 'sheet.png'), 106 + M.variants.length * (S + 18), 3 * S + 80);
 
 await b.close();
+// zoom sheets, wrist view and AOD/colour metrics: free here, many agent turns otherwise
+try {
+  execFileSync('python3', [path.join(path.dirname(fileURLToPath(import.meta.url)), 'analyse.py'), round], { cwd: JOB, stdio: ['ignore', 'ignore', 'inherit'] });
+} catch (e) { console.error(`analyse.py failed (renders are fine): ${e.message}`); }
 console.log(JSON.stringify({ round, out, variants: M.variants.map((v) => v.id) }));

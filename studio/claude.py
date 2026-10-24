@@ -50,7 +50,7 @@ def run(name: str, prompt: str, cwd: Path, log_prefix: Path) -> Result:
     log_prefix.with_suffix('.prompt.txt').write_text(prompt, encoding='utf-8')
     cmd = [
         os.environ.get('CLAUDE_BIN', 'claude'), '-p',
-        '--output-format', 'json',
+        '--output-format', 'stream-json', '--verbose',   # every step is logged, for token analysis
         '--model', meta.get('model', 'opus'),
         '--max-turns', meta.get('max_turns', '60'),
         '--append-system-prompt-file', str(sys_file),
@@ -72,9 +72,17 @@ def run(name: str, prompt: str, cwd: Path, log_prefix: Path) -> Result:
     except subprocess.TimeoutExpired:
         return Result(False, '', 0, f'{name} timed out after {meta.get("timeout_min", 40)} min')
     log_prefix.with_suffix('.stderr.txt').write_text(p.stderr, encoding='utf-8')
-    try:
-        res = json.loads(p.stdout.strip().splitlines()[-1])
-    except (json.JSONDecodeError, IndexError):
+    log_prefix.with_suffix('.stream.jsonl').write_text(p.stdout, encoding='utf-8')
+    res = None
+    for line in reversed(p.stdout.strip().splitlines()):
+        try:
+            ev = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if ev.get('type') == 'result':
+            res = ev
+            break
+    if res is None:
         return Result(False, '', 0, f'exit {p.returncode}: {p.stdout[-400:]} {p.stderr[-400:]}')
     log_prefix.with_suffix('.result.json').write_text(json.dumps(res, indent=1), encoding='utf-8')
     u = res.get('usage') or {}

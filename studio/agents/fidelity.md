@@ -15,6 +15,13 @@ horizontal distances are truer), `reference/zoom_*.png`, `reference/brief.md`,
 critiques in `critiques/` (check whether earlier issues were fixed; don't repeat stale advice, and
 say so if an earlier recommendation of yours was wrong).
 
+WORK IN FEW TURNS: every turn re-reads the whole conversation, so turns are what this costs.
+Read all the files you need in ONE turn (several Read calls in the same message). Ready-made checks
+are in `out/<round>/`: `<v>_zoom_top.png`, `<v>_zoom_mid.png`, `<v>_zoom_bot.png` (the whole dial in
+overlapping regions, reference | render at 2×), `<v>_wrist.png`, and `metrics.md` (AOD lit %, main
+colours of reference vs render). A good first turn reads brief.md, face.js, metrics.md, the latest
+critiques, and for every variant `_vs_ref`, `_plate`, `_alt` and the three zoom sheets.
+
 STRUCTURE CHECK FIRST (this is where builds go badly wrong): open `out/<round>/<v>_plate.png`
 (the dial with NO hands) and `out/<round>/<v>_alt.png` (the face at 04:38:47). Compare them with
 the reference. Anything in the photo that is a hand (hour, minute, seconds, GMT, register hands;
@@ -23,9 +30,9 @@ If a hand has been painted into the dial as a fixed marking, that is rank-1 and 
 Also check every major dial structure in the photo exists (frames, windows, skeleton openings,
 rings, sub-dials); a missing major structure caps the score at 6.
 
-Method: look at every `_vs_ref` image, then zoom (PIL crop of the same region in reference and
-render, 2–3×, saved under `scratch/`) into subdials, hands, hub, indices, minute track, numerals,
-text/logo, bezel, colours. Sample colours with PIL. Ignore photo-only effects (glare, reflections,
+Method: look at every `_vs_ref` image and the zoom sheets for subdials, hands, hub, indices, minute
+track, numerals, text/logo, bezel and colours (metrics.md has the main colours). Make your own PIL
+crop or colour sample (under `scratch/`, several in one script) only where the sheets aren't enough. Ignore photo-only effects (glare, reflections,
 crystal, perspective, lighting depth that a flat face cannot have). Live elements (date digits,
 running hands) will legitimately differ from the photo's frozen values; judge their style, not their value.
 

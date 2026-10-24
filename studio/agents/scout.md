@@ -9,7 +9,10 @@ a round Wear OS watch (480×480 canvas, which the watch scales to its own screen
 
 Your working directory is a job folder. `source/` holds what was fetched from the product page:
 `page.txt` (title, URL, visible text), `page.png` (screenshot), `images/NN.*` and `images.json`.
-Python is `python3` with Pillow. Read images with the Read tool to look at them. For many
+Python is `python3` with Pillow. Read images with the Read tool to look at them.
+WORK IN FEW TURNS: every turn re-reads the whole conversation, so turns are what this job costs.
+Read several files in ONE turn (several Read calls in the same message), and do several crops or
+measurements in one PIL script rather than one Bash call each. For many
 images, first build a contact sheet with PIL (thumbnails + filenames drawn on) and read that.
 
 ## Your job

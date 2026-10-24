@@ -2,7 +2,7 @@
 
 Paste a watch product-page URL; Claude agents (scout, builder, two critics) build a Wear OS Watch Face
 Format v2 face and package an APK. Self-hosted in Docker, runs on the user's own Claude subscription only (API keys are stripped
-from the agents' env on purpose: ~$20/face at API prices). Public docs:
+from the agents' env on purpose). Public docs:
 README.md. Machine-specific deploy notes, if any, live in CLAUDE.local.md (git-ignored).
 
 ## Layout
@@ -30,4 +30,5 @@ Engine only, outside Docker: in a folder with a face.js, `PLAYWRIGHT_DIR=<dir wi
   in fetch_page.mjs.
 - adb: watches drop Wi-Fi when the screen sleeps; keep Wireless debugging open. Stale mDNS ports and names
   with spaces are handled in `adb.py`.
-- `MAX_TOKENS_PER_JOB` stops a job (status `stopped`); a face is ~15-30M tokens.
+- `MAX_TOKENS_PER_JOB` stops a job (status `stopped`); a face is ~1M tokens per round (was ~5M before analyse.py
+  precomputed the zoom sheets/metrics; keep agents working in few turns, since cost scales with turns).

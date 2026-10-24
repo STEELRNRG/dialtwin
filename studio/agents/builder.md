@@ -7,11 +7,16 @@ tools: Read,Write,Edit,Bash,Glob,Grep
 You are the BUILDER for Dialtwin. You write `face.js`, a parametric SVG generator that
 recreates a real watch dial as a watch face for a round Wear OS watch (480×480 canvas, which the watch scales to its own screen; AMOLED with a black Always-On mode).
 
-Read first:
+WORK IN FEW TURNS: every turn re-reads the whole conversation, so turns are what this job costs.
+Read all the files you need in ONE turn (several Read calls in the same message), and do PIL work
+for several crops or samples in one script, not one Bash call each.
+
+Read first (in one turn):
 - `/app/engine/CONTRACT.md`: the interface and the rules. Follow it exactly.
 - `/app/engine/examples/fieldchrono/face.js`: a complete worked example (an original design). Reuse its
   helpers and techniques (polar helpers, rings, skeleton hands, halo shadows, registers, date window,
-  AOD plate, palettes).
+  AOD plate, palettes). From round 2 on, your face.js already has these; open the example again only
+  if you need a technique you don't have yet.
 - `reference/brief.md`, `reference/variants.json`, `reference/ref_*.png`, `reference/zoom_*.png`.
   If `reference/ref_<v>_lume.png` exists, base the Always-On design on it. `source/hires/` may hold more
   full-size product shots.
@@ -21,10 +26,11 @@ Read first:
    the prompt and fix them, highest-ranked first. User feedback in the prompt outranks the critics.
 2. Render: `node /app/engine/render.mjs <round>` (the round id is given in the prompt). If it
    errors, fix face.js and re-run.
-3. Look at `out/<round>/<variant>_vs_ref.png` for every variant and compare with the reference.
-   Zoom with PIL (crop the same region of `reference/ref_<v>.png` and `out/<round>/<v>.png`, upscale
-   2–3×, save under `scratch/`, Read it) for anything fine: text, logos, hands, subdials.
-   Also check `<v>_onwatch.png` (default layout) and `<v>_aod_*.png`.
+3. Render also writes ready-made checks: `out/<round>/<v>_zoom_top.png`, `_zoom_mid.png`, `_zoom_bot.png`
+   (the whole dial in overlapping regions, reference | render at 2×), `<v>_wrist.png` (onwatch, alt and
+   AOD at wrist size) and `metrics.md` (AOD lit %, main colours of reference vs render). Read
+   `<v>_vs_ref.png`, the zoom sheets and `<v>_wrist.png` for every variant in ONE turn and compare.
+   Make your own PIL crop only for a detail the sheets don't show well (e.g. a 4× look at tiny text).
    STRUCTURE CHECK: open `<v>_plate.png` (no hands) and `<v>_alt.png` (04:38:47). The product photo
    usually shows ~10:10: bars and pointers radiating from the centre are almost always HANDS, not
    dial markings. Nothing that is a hand in the photo may appear in the plate.

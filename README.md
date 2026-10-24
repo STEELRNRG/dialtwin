@@ -23,15 +23,15 @@ pays for your tokens.
 
 ### What it costs
 Nothing extra: Dialtwin only runs on your Claude subscription and **does not accept API keys**.
-A face takes 30–90 minutes and roughly **15–30 million tokens**, most of them cache reads. At API
-prices that would be around US$20 a face, so per-token billing is switched off on purpose.
+A face takes 30–90 minutes and roughly **1 million tokens per round**, usually 1–4 rounds. Most of
+them are cache reads. Per-token billing is switched off on purpose.
 
 The tokens count towards your plan's usage limits:
 - **Max** is recommended.
 - **Pro** works, but a job may hit the usage limit partway through. Once the limit resets, press
   **Continue** on the job page to carry on.
 
-`MAX_TOKENS_PER_JOB` (default 40M) stops a runaway job, and every job page shows the tokens it used.
+`MAX_TOKENS_PER_JOB` (default 15M) stops a runaway job, and every job page shows the tokens it used.
 
 ## Quick start
 ```bash
@@ -106,7 +106,7 @@ All settings live in `.env`; see [.env.example](.env.example).
 | Setting | Default | What it does |
 |---|---|---|
 | `CLAUDE_CODE_OAUTH_TOKEN` | | Your Claude subscription token (`claude setup-token`). API keys are ignored |
-| `MAX_TOKENS_PER_JOB` | 40000000 | Stop a job past this many tokens (0 = no limit) |
+| `MAX_TOKENS_PER_JOB` | 15000000 | Stop a job past this many tokens (0 = no limit) |
 | `HOST` / `PORT` | 127.0.0.1 / 8097 | Where the UI listens |
 | `STUDIO_URL` | http://localhost:8097 | Your address for the UI, used in notification links |
 | `PACKAGE_PREFIX` | com.dialtwin.face | Android package prefix; keep it fixed so rebuilds update in place |

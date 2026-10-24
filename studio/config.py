@@ -23,9 +23,9 @@ KEEP_BRANDING = _flag('KEEP_BRANDING')
 # The ideas scout searches the web once a day. It costs ~3M tokens a run, so it is opt-in.
 IDEAS_DAILY = _flag('IDEAS_DAILY')
 
-# Stop a job once its agents have used this many tokens (0 = no limit). A typical face takes
-# 15-30M tokens, most of them cheap cache reads.
-MAX_TOKENS_PER_JOB = int(os.environ.get('MAX_TOKENS_PER_JOB', '40000000') or 0)
+# Stop a job once its agents have used this many tokens (0 = no limit). A round takes
+# about 1M tokens (most of them cache reads); 15M leaves room for ~10 rounds plus the scout.
+MAX_TOKENS_PER_JOB = int(os.environ.get('MAX_TOKENS_PER_JOB', '15000000') or 0)
 
 
 def claude_auth():
