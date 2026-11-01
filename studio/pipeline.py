@@ -12,7 +12,7 @@ import subprocess
 import threading
 from pathlib import Path
 
-from . import claude, config, db, notify
+from . import claude, config, db, extras, notify
 
 JOBS = Path('/app/jobs')
 ENGINE = Path('/app/engine')
@@ -126,6 +126,15 @@ def stage_scout(j, d):
 
 def run_critic(j, d, name, rnd, results):
     feedback = f"\nThe owner asked for: {j['feedback']}\nCheck that it was done." if j['feedback'] else ''
+    chosen = extras.labels(j.get('extras'))
+    if chosen:
+        feedback += (f"\nThe owner asked for these extras: {chosen}. They are additions the real watch doesn't have "
+                     "(hidden in <v>.png, shown in <v>_onwatch.png and <v>_alt.png). Check each is present and looks "
+                     "like the watchmaker designed it for this dial (same fonts, colours, frames and register style, "
+                     "balanced placement, readable, quieter than the time) AND is recognisable at a glance: someone who "
+                     "wasn't told must be able to spot it, with a readable label not hidden under a hand or lume dot. "
+                     "A hidden, unlabelled or unnoticeable extra caps the watch score at 7. Their presence is never a "
+                     "fidelity fault; a generic or stuck-on look is.")
     prompt = f"Round: {rnd}\nCritique the renders in out/{rnd}/ and write critiques/{rnd}_{name}.json.{feedback}{branding_note()}"
     results[name] = agent(j['id'], name, prompt, d, f'{rnd}_{name}')
 
@@ -150,6 +159,10 @@ def stage_rounds(j, d):
             parts.append(f"OWNER FEEDBACK (highest priority): {j['feedback']}")
         if j['notes']:
             parts.append(f"Owner notes from submission: {j['notes']}")
+        face = d / 'face.js'
+        ex = extras.brief(j.get('extras'), face.exists() and 'extras:' in face.read_text(encoding='utf-8', errors='replace'))
+        if ex:
+            parts.append(ex)
         if not config.KEEP_BRANDING:
             parts.append(NO_BRANDING)
         r = agent(jid, 'builder', '\n'.join(parts), d, f'{rnd}_builder')
@@ -198,10 +211,17 @@ def combined(s):
 
 
 def pick_best_round(jid, d):
-    """Restore face.js from the best-scoring round (min fidelity + min watch score; later wins ties)."""
-    scores = json.loads(db.job(jid)['scores'] or '{}')
+    """Restore face.js from the best-scoring round (min fidelity + min watch score; later wins ties).
+
+    Only rounds from `pack_from` on count: once the owner gives feedback or changes extras, an
+    earlier round without that change must never be packaged, however well it scored."""
+    j = db.job(jid)
+    scores = json.loads(j['scores'] or '{}')
+    floor = int(j.get('pack_from') or 0)
     best, best_val = None, -1.0
     for rnd, s in sorted(scores.items(), key=lambda kv: int(kv[0][1:])):
+        if int(rnd[1:]) < floor:
+            continue
         val = combined(s)
         if val >= best_val and (d / 'out' / rnd / 'face.js').exists():
             best, best_val = rnd, val

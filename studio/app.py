@@ -12,7 +12,7 @@ from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from . import adb, config, db, ideas, pipeline
+from . import adb, config, db, extras, ideas, pipeline
 
 app = FastAPI(title=config.APP_NAME)
 T = Jinja2Templates(directory=str(Path(__file__).parent / 'templates'))
@@ -52,14 +52,15 @@ def index(request: Request):
     jobs = db.jobs()
     for j in jobs:
         j['thumb'] = _thumb(j)
-    return T.TemplateResponse(request, 'index.html', {'jobs': jobs, 'watch': db.setting('watch_ip')})
+    return T.TemplateResponse(request, 'index.html', {'jobs': jobs, 'watch': db.setting('watch_ip'),
+                                                       'extra_options': extras.OPTIONS})
 
 
 @app.post('/jobs')
-def create(url: str = Form(...), notes: str = Form(''), rounds: int = Form(5)):
+def create(url: str = Form(...), notes: str = Form(''), rounds: int = Form(5), extra: list[str] = Form([])):
     if not url.startswith(('http://', 'https://')):
         raise HTTPException(400, 'Paste a full http(s) URL')
-    jid = db.create_job(url.strip(), notes.strip(), max(1, min(rounds, 10)))
+    jid = db.create_job(url.strip(), notes.strip(), max(1, min(rounds, 10)), extras.parse(extra))
     return RedirectResponse(f'/job/{jid}', 303)
 
 
@@ -88,7 +89,8 @@ def job_page(request: Request, jid: int, msg: str = ''):
     return T.TemplateResponse(request, 'job.html', {
         'j': j, 'events': evs, 'variants': variants, 'latest': latest, 'msg': msg, 'sources': sources, 'brief': brief,
         'has_apk': bool(j['apk']) and (d / j['apk']).exists(), 'watch': db.setting('watch_ip'),
-        'scores': json.loads(j['scores'] or '{}')})
+        'scores': json.loads(j['scores'] or '{}'),
+        'extra_options': extras.OPTIONS, 'extras_on': extras.ids(j.get('extras'))})
 
 
 @app.get('/job/{jid}/file/{rel:path}')
@@ -104,12 +106,18 @@ def job_file(jid: int, rel: str):
 
 
 @app.post('/job/{jid}/continue')
-def cont(jid: int, feedback: str = Form(''), rounds: int = Form(2)):
+def cont(jid: int, feedback: str = Form(''), rounds: int = Form(2), extra: list[str] = Form([])):
     j = db.job(jid)
     if not j or j['status'] in ('running', 'queued'):
         return RedirectResponse(f'/job/{jid}', 303)
-    db.update(jid, status='queued', feedback=feedback.strip(), max_rounds=j['round'] + max(0, min(rounds, 6)), message='')
-    db.event(jid, 'user', f'Continue: {rounds} more round(s).' + (f' Feedback: {feedback.strip()}' if feedback.strip() else ''))
+    new_extras = extras.parse(extra)
+    if new_extras != (j.get('extras') or '') and rounds < 1:
+        rounds = 1   # extras are drawn by the builder: changing them needs a round
+    asked = bool(feedback.strip()) or new_extras != (j.get('extras') or '')
+    db.update(jid, status='queued', feedback=feedback.strip(), max_rounds=j['round'] + max(0, min(rounds, 6)), message='',
+              extras=new_extras, **({'pack_from': j['round'] + 1} if asked and rounds > 0 else {}))
+    changed = f' Extras: {extras.labels(new_extras) or "none"}.' if new_extras != (j.get('extras') or '') else ''
+    db.event(jid, 'user', f'Continue: {rounds} more round(s).' + (f' Feedback: {feedback.strip()}' if feedback.strip() else '') + changed)
     return RedirectResponse(f'/job/{jid}', 303)
 
 

@@ -45,6 +45,10 @@ def init():
             c.execute('alter table jobs add column approved integer default 0')
         if 'scout_hint' not in cols:
             c.execute("alter table jobs add column scout_hint text default ''")
+        if 'pack_from' not in cols:  # first round packaging may pick (set when the owner asks for changes)
+            c.execute('alter table jobs add column pack_from integer default 0')
+        if 'extras' not in cols:   # owner-chosen extras, comma list of studio.extras.OPTIONS ids
+            c.execute("alter table jobs add column extras text default ''")
         # a restart kills in-flight work: surface it instead of leaving it "running"
         c.execute("update jobs set status='failed', message='interrupted by restart: press Continue' where status='running'")
 
@@ -53,10 +57,10 @@ def now():
     return time.time()
 
 
-def create_job(url, notes, max_rounds):
+def create_job(url, notes, max_rounds, extras=''):
     with conn() as c:
-        cur = c.execute('insert into jobs(url, notes, max_rounds, created, updated) values (?,?,?,?,?)',
-                        (url, notes, max_rounds, now(), now()))
+        cur = c.execute('insert into jobs(url, notes, max_rounds, extras, created, updated) values (?,?,?,?,?,?)',
+                        (url, notes, max_rounds, extras, now(), now()))
         return cur.lastrowid
 
 

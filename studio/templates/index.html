@@ -12,6 +12,7 @@
     </div>
     <div style="margin-top:10px"><label class="muted">Notes (optional): e.g. "only the green dial", "keep the date window", "bigger hands"</label>
       <textarea name="notes"></textarea></div>
+    {% with checked=[] %}{% include '_extras.html' %}{% endwith %}
     <div style="margin-top:12px" class="row"><div><button>Build it</button>
       <span class="muted" style="margin-left:10px">Takes roughly 30–90 minutes and 15–30M tokens. Notifications are sent if you set them up.</span></div></div>
   </form>

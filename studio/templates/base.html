@@ -19,6 +19,11 @@
   h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:17px; margin:0 0 12px; } h3 { font-size:15px; margin:14px 0 6px; }
   input[type=text], input[type=url], input[type=number], textarea { width:100%; background:#0f1113; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font:inherit; }
   textarea { min-height:70px; }
+  fieldset.extras { border:1px solid var(--line); border-radius:8px; padding:8px 12px 12px; margin:12px 0 0; display:flex; flex-wrap:wrap; gap:8px 18px; }
+  fieldset.extras legend { padding:0 6px; }
+  label.tick { display:flex; gap:8px; align-items:flex-start; cursor:pointer; min-width:150px; }
+  label.tick input { margin-top:3px; accent-color:var(--accent, #ff8a3d); }
+  label.tick small { display:block; color:#8a8f96; font-size:12px; }
   button, .btn { background:var(--acc); color:#140a02; border:0; border-radius:8px; padding:9px 16px; font:600 14px system-ui; cursor:pointer; display:inline-block; }
   button.ghost, .btn.ghost { background:transparent; color:var(--ink); border:1px solid var(--line); }
   button.danger { background:transparent; color:var(--bad); border:1px solid #4a2523; }

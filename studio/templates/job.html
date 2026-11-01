@@ -10,7 +10,7 @@
     <span class="pill {{ j.status }}">{{ j.status }}</span>
     <span class="muted">{{ j.stage }}{% if j.round %} · round {{ j.round }}/{{ j.max_rounds }}{% endif %}</span>
   </div>
-  <div class="muted" style="margin-top:4px"><a href="{{ j.url }}" target="_blank" rel="noopener">{{ j.url }}</a>{% if j.notes %} · notes: {{ j.notes }}{% endif %} · {{ '{:,}'.format(j.tokens) }} tokens</div>
+  <div class="muted" style="margin-top:4px"><a href="{{ j.url }}" target="_blank" rel="noopener">{{ j.url }}</a>{% if j.notes %} · notes: {{ j.notes }}{% endif %}{% if extras_on %} · extras: {% for x in extras_on %}{{ extra_options[x][0] }}{{ ', ' if not loop.last }}{% endfor %}{% endif %} · {{ '{:,}'.format(j.tokens) }} tokens</div>
   {% if j.message %}<p style="color:var(--bad)">{{ j.message }}</p>{% endif %}
 
   <div class="row" style="margin-top:14px">
@@ -68,6 +68,7 @@
   <h2>{{ 'Improve it' if j.round else 'Continue' }}</h2>
   <form method="post" action="/job/{{ j.id }}/continue">
     <textarea name="feedback" placeholder="What should change? e.g. &quot;hands should be thicker&quot;, &quot;the red is too orange&quot;, &quot;add the date window&quot;. Leave empty to just run more rounds."></textarea>
+    {% with checked=extras_on %}{% include '_extras.html' %}{% endwith %}
     <div class="row" style="margin-top:10px">
       <div style="flex:0 1 160px"><label class="muted">More rounds (0 = just rebuild APK)</label><input type="number" name="rounds" value="2" min="0" max="6"></div>
       <div style="flex:0 0 auto"><button>Go</button></div>

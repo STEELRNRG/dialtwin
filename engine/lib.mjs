@@ -35,6 +35,23 @@ export async function loadManifest() {
     if (h.angles !== undefined && !ok(h.angles, Number.isFinite)) throw new Error(`hand ${h.id}: angles must be 31 numbers`);
     if (h.pivot) throw new Error(`hand ${h.id}: dayOfMonth uses positions, not pivot (draw the marker around 0,0)`);
   }
+  const SOURCES = ['steps', 'heartRate', 'battery', 'weekday', 'date', 'weather'];
+  const exIds = new Set();
+  for (const e of M.extras || []) {
+    if (!/^[a-z0-9]+$/.test(e.id || '')) throw new Error(`extra ${e.id}: id must be lowercase [a-z0-9]`);
+    if (!SOURCES.includes(e.source)) throw new Error(`extra ${e.id}: source must be one of ${SOURCES.join(', ')}`);
+    if (e.text) for (const k of ['x', 'y', 'w', 'h', 'size']) {
+      if (!Number.isFinite(e.text[k])) throw new Error(`extra ${e.id}: text.${k} must be a number`);
+    }
+    exIds.add(e.id);
+  }
+  for (const h of M.hands) {
+    if (h.extra && !exIds.has(h.extra)) throw new Error(`hand ${h.id}: extra '${h.extra}' is not in manifest.extras`);
+    if (h.kind === 'gauge') {
+      if (!['steps', 'stepPercent', 'heartRate', 'battery', 'weather'].includes(h.source)) throw new Error(`hand ${h.id}: gauge source must be steps|stepPercent|heartRate|battery|weather`);
+      for (const k of ['min', 'max', 'from', 'to']) if (!Number.isFinite(h[k])) throw new Error(`hand ${h.id}: gauge needs numeric ${k}`);
+    }
+  }
   return M;
 }
 

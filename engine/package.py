@@ -15,7 +15,12 @@ Hand kinds (manifest.hands[].kind):
   static                never moves (hubs, caps, parked hands)
   dayOfMonth            marker that jumps to positions[DAY - 1] (31 [x, y] in dial units, optional
                         angles[DAY - 1]): date beads, lit date holes, jumping date pointers
+  gauge                 hand turned by live data: source steps|stepPercent|heartRate|battery|weather,
+                        value min..max -> clock degrees from..to
 Optional manifest.dateWindow = {x, y, w, h, size, color, font: 'File.ttf', format: 'DAY_Z'} in dial units.
+Optional manifest.extras = [{id, source, label, text?: {like dateWindow + prefix, suffix, align, labels}}]:
+  owner-chosen extras (steps, heart rate, battery, weekday, date, weather). Each is its own group (art layer
+  x_<id>, live text, and every hand with extra=<id>) behind an on/off BooleanConfiguration on the watch.
 """
 import argparse
 import json
@@ -35,6 +40,27 @@ BATTERY = 'clamp([BATTERY_PERCENT], 0, 99) * 3.6'
 STEPS = 'clamp([STEP_PERCENT], 0, 99) * 3.6'
 GMT = '([HOUR_0_23] + [MINUTE] / 60.0) * 15'
 WEEKDAY = '([DAY_OF_WEEK] - 1) * 51.4286'
+# live text per extra source; weekday and weather go through a Condition instead (see extra_text)
+EXTRA_TEXT = {'steps': '[STEP_COUNT]', 'heartRate': '[HEART_RATE]', 'battery': '[BATTERY_PERCENT]', 'date': '[DAY_Z]'}
+GAUGE_SRC = {'steps': '[STEP_COUNT]', 'stepPercent': '[STEP_PERCENT]', 'heartRate': '[HEART_RATE]',
+             'battery': '[BATTERY_PERCENT]', 'weather': '[WEATHER.TEMPERATURE]'}
+WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+EXTRA_LABELS = {'steps': 'Steps', 'heartRate': 'Heart rate', 'battery': 'Battery', 'weekday': 'Day of week',
+                'date': 'Date', 'weather': 'Temperature'}
+PERMISSIONS = {'heartRate': 'android.permission.BODY_SENSORS', 'steps': 'android.permission.ACTIVITY_RECOGNITION',
+               'stepPercent': 'android.permission.ACTIVITY_RECOGNITION'}
+
+
+def gauge_expr(h):
+    src, lo, hi = GAUGE_SRC[h['source']], h['min'], h['max']
+    k = (h['to'] - h['from']) / (hi - lo)
+    return f"{h['from']} + (clamp({src}, {lo}, {hi}) - {lo}) * {round(k, 5)}"
+
+
+def esc_xml(s):
+    return str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+
+
 AMBIENT_ONLY = '<Variant mode="AMBIENT" target="alpha" value="255"/>'
 HIDE_IN_AMBIENT = '<Variant mode="AMBIENT" target="alpha" value="0"/>'
 FULL = {'x': 0, 'y': 0, 'w': 480, 'h': 480, 'px': 0.5, 'py': 0.5}
@@ -177,6 +203,11 @@ def main():
                 flat = Image.new('RGBA', im.size, (0, 0, 0, 255))
                 flat.alpha_composite(im)
                 flat.convert('RGB').save(draw / f'{res(v, lay, layer)}.png', optimize=True)
+            for e in M.get('extras') or []:
+                for layer in [f"x_{e['id']}"] + [f"x_{e['id']}_aod_{t}" for t in T]:
+                    im = Image.open(asset(v, lay, layer)).convert('RGBA')
+                    if im.getchannel('A').getbbox():          # skip empty art layers
+                        im.save(draw / f'{res(v, lay, layer)}.png', optimize=True)
             for h in M['hands']:
                 pv = pivots[lay][h['id']]
                 boxes[res(v, lay, h['id'])] = crop_hand(asset(v, lay, h['id']), draw / f'{res(v, lay, h["id"])}.png', pv)
@@ -190,8 +221,11 @@ def main():
     dws = M.get('dateWindow') or []
     if isinstance(dws, dict):
         dws = [dws]
+    extras = M.get('extras') or []
+    ex_ids = {e['id'] for e in extras}
     fonts = {}
-    for dw in dws:
+    for dw in dws + [e['text'] for e in extras if e.get('text')]:
+        dw.setdefault('font', 'Oxanium.ttf')
         font_file = (JOB / 'fonts' / dw['font']) if (JOB / 'fonts' / dw['font']).exists() else ENGINE / 'fonts' / dw['font']
         fam = res_name(Path(dw['font']).stem)
         fonts[dw['font']] = fam
@@ -216,31 +250,119 @@ def main():
         x.image(FULL, res(v, lay, 'plate'))
         for dw in dws:
             date_text(v, lay, dw, dw.get('colors', {}).get(v, dw.get('color', '#ffffffff')))
+        for e in extras:
+            extra_group(v, lay, e, None)
         for h in M['hands']:
-            r = res(v, lay, h['id'])
-            m = boxes[r]
-            k = h['kind']
-            if k in ('hour', 'minute'):
-                x.clock_hand('HourHand' if k == 'hour' else 'MinuteHand', m, r)
-            elif k == 'second':
-                x.clock_hand('SecondHand', m, r, own_box=True, motion=motion_for(h.get('sweep')))
-            elif k == 'chrono':
-                x.option_switch('chrono', [
-                    ('parked', lambda: x.image(m, r)),
-                    ('sweep', lambda: x.clock_hand('SecondHand', m, r, motion='<Sweep frequency="SYNC_TO_DEVICE"/>')),
-                ])
-            elif k in ('battery', 'steps'):
-                expr = BATTERY if k == 'battery' else STEPS
-                x.option_switch('counters', [('live', lambda: x.image(m, r, expr)), ('rest', lambda: x.image(m, r))])
-            elif k == 'gmt24':
-                x.image(m, r, GMT)
-            elif k == 'weekday':
-                x.image(m, r, WEEKDAY)
-            elif k == 'dayOfMonth':
-                x.day_marker(m, r, h, meta['scales'][lay])
-            else:
-                x.image(m, r)
+            if h.get('extra') not in ex_ids:
+                active_hand(v, lay, h)
         x.close('</Group>')
+
+    def extra_group(v, lay, e, tint):
+        """One extra: its art, live text and gauge hands, behind the wearer's on/off switch."""
+        ambient_only = tint is not None
+        art = res(v, lay, f"x_{e['id']}" + (f'_aod_{tint}' if tint else ''))
+        has_art = (draw / f'{art}.png').exists()
+        t = e.get('text')
+        if not t:
+            col = None
+        elif tint:
+            col = (t.get('aodColors') or {}).get(tint)
+        else:
+            col = (t.get('colors') or {}).get(v, t.get('color', '#ffffffff'))
+        hands = [h for h in M['hands'] if h.get('extra') == e['id'] and (not tint or h['id'] in M['aodHands'])]
+        if not (has_art or col or hands):
+            return
+        x.open(f'<BooleanConfiguration id="x_{e["id"]}">')
+        x.open('<BooleanOption id="TRUE">')
+        x.group(f'x_{e["id"]}_{len(x.lines)}')
+        if has_art:
+            x.image(FULL, art, ambient_only=ambient_only)
+        if col:
+            extra_text(lay, e, col, ambient_only)
+        for h in hands:
+            if tint:
+                r = res(v, lay, f"{h['id']}_aod_{tint}")
+                x.image(boxes[r], r, gauge_expr(h) if h['kind'] == 'gauge' else None, ambient_only=True)
+            else:
+                active_hand(v, lay, h)
+        x.close('</Group>')
+        x.close('</BooleanOption>')
+        x.close('</BooleanConfiguration>')
+
+    def extra_text(lay, e, color, ambient_only):
+        t, src = e['text'], e['source']
+        pre, suf = esc_xml(t.get('prefix', '')), esc_xml(t.get('suffix', ''))
+        if src == 'weekday':      # literal labels: the face picks the case/language that suits the dial
+            labels = t.get('labels') or WEEKDAYS
+            x.open('<Condition>')
+            x.open('<Expressions>')
+            for i in range(7):
+                x.add(f'<Expression name="dow{i}">[DAY_OF_WEEK] == {i + 1}</Expression>')
+            x.close('</Expressions>')
+            for i in range(7):
+                x.open(f'<Compare expression="dow{i}">')
+                text_box(lay, t, color, f'{pre}%s{suf}', ambient_only, lit(labels[i]))
+                x.close('</Compare>')
+            x.close('</Condition>')
+        elif src == 'weather':    # "--" until the phone has sent a forecast
+            x.open('<Condition>')
+            x.open('<Expressions>')
+            x.add('<Expression name="wx">[WEATHER.IS_AVAILABLE]</Expression>')
+            x.close('</Expressions>')
+            x.open('<Compare expression="wx">')
+            text_box(lay, t, color, f'{pre}%s{suf}', ambient_only, '[WEATHER.TEMPERATURE]')
+            x.close('</Compare>')
+            x.open('<Default>')
+            text_box(lay, t, color, f'{pre}%s{suf}', ambient_only, lit('--'))
+            x.close('</Default>')
+            x.close('</Condition>')
+        else:
+            text_box(lay, t, color, f'{pre}%s{suf}', ambient_only, EXTRA_TEXT[src])
+
+    def lit(text):      # a fixed string as a Template parameter (Template must have one)
+        return '&quot;' + esc_xml(text).replace('&quot;', '') + '&quot;'
+
+    def text_box(lay, t, color, template, ambient_only, param):
+        sc = meta['scales'][lay]
+        bx = round(240 + (t['x'] - t['w'] / 2) * sc)
+        by = round(240 + (t['y'] - t['h'] / 2) * sc)
+        a = ' alpha="0"' if ambient_only else ''
+        x.open(f'<PartText x="{bx}" y="{by}" width="{round(t["w"] * sc)}" height="{round(t["h"] * sc)}"{a}>')
+        if ambient_only:
+            x.add(AMBIENT_ONLY)
+        x.open(f'<Text align="{t.get("align", "CENTER")}">')
+        x.open(f'<Font family="{fonts[t["font"]]}" size="{round(t["size"] * sc, 1)}" color="{color}">')
+        x.add(f'<Template>{template}<Parameter expression="{param}"/></Template>')
+        x.close('</Font>')
+        x.close('</Text>')
+        x.close('</PartText>')
+
+    def active_hand(v, lay, h):
+        r = res(v, lay, h['id'])
+        m = boxes[r]
+        k = h['kind']
+        if k in ('hour', 'minute'):
+            x.clock_hand('HourHand' if k == 'hour' else 'MinuteHand', m, r)
+        elif k == 'second':
+            x.clock_hand('SecondHand', m, r, own_box=True, motion=motion_for(h.get('sweep')))
+        elif k == 'chrono':
+            x.option_switch('chrono', [
+                ('parked', lambda: x.image(m, r)),
+                ('sweep', lambda: x.clock_hand('SecondHand', m, r, motion='<Sweep frequency="SYNC_TO_DEVICE"/>')),
+            ])
+        elif k in ('battery', 'steps'):
+            expr = BATTERY if k == 'battery' else STEPS
+            x.option_switch('counters', [('live', lambda: x.image(m, r, expr)), ('rest', lambda: x.image(m, r))])
+        elif k == 'gmt24':
+            x.image(m, r, GMT)
+        elif k == 'weekday':
+            x.image(m, r, WEEKDAY)
+        elif k == 'dayOfMonth':
+            x.day_marker(m, r, h, meta['scales'][lay])
+        elif k == 'gauge':
+            x.image(m, r, gauge_expr(h))
+        else:
+            x.image(m, r)
 
     def date_text(v, lay, dw, color, ambient_only=False):
         sc = meta['scales'][lay]
@@ -265,8 +387,10 @@ def main():
                     col = (dw.get('aodColors') or {}).get(t)
                     if col:
                         date_text(v, lay, dw, col, ambient_only=True)
+                for e in extras:
+                    extra_group(v, lay, e, t)
                 for h in M['hands']:
-                    if h['id'] not in M['aodHands']:
+                    if h['id'] not in M['aodHands'] or h.get('extra') in ex_ids:
                         continue
                     r = res(v, lay, f'{h["id"]}_aod_{t}')
                     m = boxes[r]
@@ -279,6 +403,8 @@ def main():
                         x.image(m, r, WEEKDAY, ambient_only=True)
                     elif k == 'dayOfMonth':
                         x.day_marker(m, r, h, meta['scales'][lay], ambient_only=True)
+                    elif k == 'gauge':
+                        x.image(m, r, gauge_expr(h), ambient_only=True)
                     elif k in ('static',):
                         x.image(m, r, ambient_only=True)
             return fn
@@ -334,6 +460,10 @@ def main():
         list_cfg('counters', 'Registers', [('live', f'Live: {what}', None), ('rest', 'At rest', None)], 'live')
     if 'chrono' in kinds:
         list_cfg('chrono', 'Chrono hand', [('parked', 'Parked at 12', None), ('sweep', 'Sweep seconds', None)], 'parked')
+    for e in extras:   # the wearer can switch each extra off in the watch's customise screen
+        cid = f"x_{e['id']}"
+        strings[f'{cid}_label'] = e.get('label') or EXTRA_LABELS.get(e['source'], e['id'])
+        cfg.append(f'    <BooleanConfiguration id="{cid}" displayName="{cid}_label" screenReaderText="{cid}_label" defaultValue="TRUE"/>')
     if not cfg:  # UserConfigurations needs at least one entry
         list_cfg('style', 'Dial', [(V[0], M['variants'][0]['label'], None)], V[0])
 
@@ -357,12 +487,15 @@ def main():
     (WFF / 'res' / 'xml' / 'watch_face_info.xml').write_text(
         '<?xml version="1.0" encoding="utf-8"?>\n<WatchFaceInfo>\n  <Preview value="@drawable/preview"/>\n'
         '  <Editable value="true"/>\n  <MultipleInstancesAllowed value="true"/>\n</WatchFaceInfo>\n', encoding='utf-8')
+    srcs = {e['source'] for e in extras} | {h['source'] for h in M['hands'] if h.get('kind') == 'gauge'}
+    perms = ''.join(f'  <uses-permission android:name="{n}"/>\n'
+                    for n in sorted({PERMISSIONS[s] for s in srcs if s in PERMISSIONS}))
     (WFF / 'AndroidManifest.xml').write_text(f'''<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="{args.package}" android:versionCode="{args.version}" android:versionName="1.{args.version}">
   <uses-sdk android:minSdkVersion="34" android:targetSdkVersion="34"/>
   <uses-feature android:name="android.hardware.type.watch"/>
-  <application android:label="@string/watch_face_name" android:hasCode="false">
+{perms}  <application android:label="@string/watch_face_name" android:hasCode="false">
     <meta-data android:name="com.google.android.wearable.standalone" android:value="true"/>
     <property android:name="com.google.wear.watchface.format.version" android:value="2"/>
     <property android:name="com.google.wear.watchface.format.publisher" android:value="watchface-studio-1.0"/>

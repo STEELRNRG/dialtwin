@@ -61,11 +61,47 @@ hands: [{ id: 'bead', kind: 'dayOfMonth', positions: [[x1, y1], /* ... */ [x31, 
 - On the watch it is a WFF `<Condition>` on `[DAY]` with one placed copy of the same image per day;
   previews use the `day=` query (render.mjs passes `photoPose.day` for photo renders).
 
+### Extras: steps, heart rate, battery, weekday, date, weather (only when the owner asks)
+The owner may tick extras the real watch doesn't have. Each one is an entry in `manifest.extras`; the
+face draws its **art** in the watch's own style, the engine draws the **live value**, and the wearer gets
+an on/off switch for each extra in the watch's customise screen. FIELD 01 has a worked example (`day`).
+```js
+extras: [{
+  id: 'bpm',                  // lowercase [a-z0-9]
+  source: 'heartRate',        // steps | heartRate | battery | weekday | date | weather
+  label: 'Heart rate',        // name of the on/off switch on the watch (optional)
+  text: {                     // optional live readout; box in dial units, like dateWindow
+    x: 0, y: 70, w: 54, h: 18, size: 13, font: 'Oxanium.ttf', align: 'CENTER',   // START | CENTER | END
+    colors: { slate: '#ffe9e5d9' }, color: '#ffe9e5d9',   // '#AARRGGBB' per variant, or one colour
+    aodColors: { green: '#ff3f9a58', red: '#ff8e2820' },  // only if it shows in Always-On
+    prefix: '', suffix: '',   // e.g. suffix '%' for battery, '°' for weather
+    labels: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],   // weekday only, Sunday first
+  },
+}]
+```
+- `build()` returns `extras: {bpm: svg(...)}` (static art: window frame, small register, printed label,
+  icon) and optionally `aodExtras: {bpm: svg(...)}` for Always-On. The art is **not** in the plate, so it
+  disappears when the wearer switches the extra off.
+- Gauge hand: a hand with `kind: 'gauge', source, min, max, from, to, extra: 'bpm', pivot` turns from
+  `from` to `to` (clock degrees) as the value goes min→max (`source`: steps, stepPercent, heartRate,
+  battery, weather). `extra` ties it to that extra's switch; list it under the time hands in `hands`.
+- Weather shows `--` until the phone has sent a forecast. Heart rate and steps make the watch ask for
+  sensor permissions.
+- Design rule: an extra must look as if the watchmaker drew it for this dial. Reuse the dial's fonts,
+  colours, window frames, register style and tick style; place it in real empty space; keep it quieter
+  than the time, yet recognisable at a glance: give it a readable label (>= 12 px, never under a hand) even
+  when it reuses a register. If the watch already has a fitting element (date window, spare register), wire the extra
+  into it rather than adding a duplicate.
+- Renders: `<v>.png` (photo pose) hides extras (`extras=0`), since the product photo has none;
+  `<v>_onwatch.png`, `<v>_alt.png` and the AOD renders show them. Preview samples: `stepcount=6240`,
+  `hr=72`, `battery=80`, `temp=21`.
+
 ## build() return value
 - `plate`: full static dial for `variant` + `layout`, **no moving hands**.
 - `hands[id]`: SVG for each hand, drawn **pointing at 12 around its own pivot (0,0)**. The engine
   places it at `pivot` and rotates it.
 - `aod`, `aodHands[id]`: Always-On plate and hands in the tint `aod`.
+- `extras[id]`, `aodExtras[id]` (only with `manifest.extras`): full `svg()` strings with each extra's static art.
 - `scale`: dial-units → pixels factor for this layout (the example uses `240 / flangeOuter`
   for `dial` and `1` for `bezel`).
 

@@ -22,7 +22,9 @@
 //        layer=all|plate|<hand id>   t=HH:MM:SS (fixed; omit = live)   a_<hand id>=<deg> (angle override)
 //        round=1 (circular crop)  frame=1 (black page)  live data for previews: battery=0-100 steps=0-100
 //        day=1-31 (day of the month for date windows and dayOfMonth markers; omit = today)
+//        extras=0 hides manifest.extras; samples: stepcount= hr= temp= (battery= is shared with registers)
 const q = new URLSearchParams(location.search);
+const num = (k, d) => (q.has(k) ? +q.get(k) : d);
 const done = () => { document.body.dataset.ready = '1'; };
 window.onerror = (m, s, l) => { document.getElementById('err').textContent += `${m} @${s}:${l}\n`; document.body.dataset.error = m; done(); };
 
@@ -73,15 +75,55 @@ function loadCss(href) { const l = document.createElement('link'); l.rel = 'styl
     host.innerHTML = F.svg(`<text x="${dw.x}" y="${dw.y}" font-family="'${fam}'" font-size="${dw.size}" fill="${col}" text-anchor="middle" dominant-baseline="central">${fmt}</text>`);
     W.appendChild(host.firstElementChild);
   }
+  // extras (steps, heart rate, ...): the face draws each one's art in the watch's own style
+  // (F.extras[id] / F.aodExtras[id]); the engine adds the live text. extras=0 hides them all
+  // (photo-pose renders compare the bare dial with the product photo).
+  const extrasOn = q.get('extras') !== '0';
+  const EX = (M.extras || []);
+  const exOn = (id) => extrasOn && EX.some((e) => e.id === id);
+  if (extrasOn) for (const e of EX) {
+    const art = aod ? (F.aodExtras || {})[e.id] : (F.extras || {})[e.id];
+    if (art && want('x_' + e.id)) {
+      const host = document.createElement('div');
+      host.innerHTML = art;
+      W.appendChild(host.firstElementChild);
+    }
+    const t = e.text;
+    if (!t || !(layer === 'all' || layer === 'x_' + e.id + '_text')) continue;
+    if (aod && !(t.aodColors && t.aodColors[tint])) continue;
+    const fam = (t.font || 'Oxanium.ttf').replace(/\.ttf$/i, '').replace(/-.*$/, '');
+    let col = aod ? t.aodColors[tint] : ((t.colors && t.colors[variant]) || t.color || '#ffffffff');
+    if (/^#[0-9a-f]{8}$/i.test(col)) col = '#' + col.slice(3);
+    const anchor = { START: 'start', END: 'end' }[t.align] || 'middle';
+    const tx = anchor === 'start' ? t.x - t.w / 2 : anchor === 'end' ? t.x + t.w / 2 : t.x;
+    const str = (t.prefix || '') + sampleText(e) + (t.suffix || '');
+    const host = document.createElement('div');
+    host.innerHTML = F.svg(`<text x="${tx}" y="${t.y}" font-family="'${fam}'" font-size="${t.size}" fill="${col}" text-anchor="${anchor}" dominant-baseline="central" letter-spacing="${t.letterSpacing || 0}">${str}</text>`);
+    W.appendChild(host.firstElementChild);
+  }
+  function sampleText(e) {
+    const d = today();
+    switch (e.source) {
+      case 'steps': return String(num('stepcount', 6240));
+      case 'heartRate': return String(num('hr', 72));
+      case 'battery': return String(num('battery', 80));
+      case 'weather': return String(num('temp', 21));
+      case 'date': return String(d.getDate()).padStart(e.text.pad === false ? 1 : 2, '0');
+      case 'weekday': return (e.text.labels || ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'])[d.getDay()];
+      default: return '';
+    }
+  }
+
   const rot = {};
   const list = aod ? M.hands.filter((h) => M.aodHands.includes(h.id)) : M.hands;
   for (const h of list) {
     if (!want(h.id) || !H[h.id]) continue;
+    if (h.extra && !exOn(h.extra) && !single) continue;   // gauge hands belong to their extra
     const [px, py] = h.pivot || [0, 0];
     const host = document.createElement('div');
     host.innerHTML = F.svg(`<g class="pos" transform="translate(${px} ${py})"><g class="rot">${H[h.id]}</g></g>`);
     W.appendChild(host.firstElementChild);
-    rot[h.id] = { g: W.lastElementChild.querySelector('.rot'), kind: h.kind };
+    rot[h.id] = { g: W.lastElementChild.querySelector('.rot'), kind: h.kind, h };
     // dayOfMonth: the marker jumps to positions[day - 1] (optionally turned by angles[day - 1])
     if (h.kind === 'dayOfMonth' && !single) {
       const [x, y] = h.positions[dayOfMonth - 1];
@@ -90,8 +132,7 @@ function loadCss(href) { const l = document.createElement('link'); l.rel = 'styl
     }
   }
 
-  const num = (k, d) => (q.has(k) ? +q.get(k) : d);
-  function angle(kind, d) {
+  function angle(kind, d, h) {
     const s = d.getSeconds() + d.getMilliseconds() / 1000, m = d.getMinutes() + s / 60, h24 = d.getHours() + m / 60;
     switch (kind) {
       case 'hour': return (h24 % 12) * 30;
@@ -102,8 +143,16 @@ function loadCss(href) { const l = document.createElement('link'); l.rel = 'styl
       case 'battery': return Math.min(num('battery', 80), 99) * 3.6;
       case 'steps': return Math.min(num('steps', 45), 99) * 3.6;
       case 'weekday': return d.getDay() * (360 / 7);
+      case 'gauge': return gaugeAngle(h);
       default: return 0;
     }
+  }
+  // gauge: value of h.source between min..max maps onto clock degrees from..to
+  function gaugeAngle(h) {
+    const v = { steps: num('stepcount', 6240), stepPercent: num('steps', 45), heartRate: num('hr', 72),
+      battery: num('battery', 80), weather: num('temp', 21) }[h.source] ?? 0;
+    const k = Math.min(1, Math.max(0, (v - h.min) / (h.max - h.min)));
+    return h.from + k * (h.to - h.from);
   }
   function now() {
     const t = q.get('t');
@@ -112,7 +161,7 @@ function loadCss(href) { const l = document.createElement('link'); l.rel = 'styl
   }
   function set(d) {
     for (const [id, r] of Object.entries(rot)) {
-      const a = single ? 0 : (q.has('a_' + id) ? +q.get('a_' + id) : r.fixed !== undefined ? r.fixed : angle(r.kind, d));
+      const a = single ? 0 : (q.has('a_' + id) ? +q.get('a_' + id) : r.fixed !== undefined ? r.fixed : angle(r.kind, d, r.h));
       r.g.setAttribute('transform', `rotate(${a})`);
     }
   }

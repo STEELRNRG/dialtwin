@@ -2,7 +2,8 @@
 // usage (cwd = job dir): node /app/engine/render.mjs r1
 //   out/r1/<v>.png          photo pose, layout that best matches the product photo (manifest.photoLayout or first)
 //   out/r1/<v>_vs_ref.png   reference | render
-//   out/r1/<v>_onwatch.png  default layout at preview time (what the watch shows)
+//   out/r1/<v>_onwatch.png  default layout at preview time (what the watch shows, extras included)
+//   (<v>.png hides manifest.extras: the photo has none)
 //   out/r1/<v>_aod_<tint>.png
 //   out/r1/sheet.png        all variants: reference row over render row (shown on the job page)
 //   then analyse.py adds <v>_zoom_{top,mid,bot}.png, <v>_wrist.png and metrics.md (see that file)
@@ -28,7 +29,8 @@ const url = (f) => pathToFileURL(f).href;
 
 for (const v of M.variants) {
   const base = { v: v.id, round: '1', frame: '1' };
-  await shot({ ...base, layout: photoLayout, t: pose.time, ...photoDay, ...poseAngles }, path.join(out, `${v.id}.png`));
+  // the photo pose hides extras (steps, heart rate...): they are additions the real watch doesn't have
+  await shot({ ...base, layout: photoLayout, t: pose.time, ...photoDay, ...poseAngles, extras: '0' }, path.join(out, `${v.id}.png`));
   await shot({ ...base, layout: M.layouts[0].id, t: M.previewTime || '10:09:30' }, path.join(out, `${v.id}_onwatch.png`));
   // structure checks: the plate alone (anything hand-like here is a bug) and a different time
   // (everything that is a hand in the photo must have moved)

@@ -33,3 +33,7 @@ Engine only, outside Docker: in a folder with a face.js, `PLAYWRIGHT_DIR=<dir wi
   with spaces are handled in `adb.py`.
 - `MAX_TOKENS_PER_JOB` stops a job (status `stopped`); a face is ~1M tokens per round (was ~5M before analyse.py
   precomputed the zoom sheets/metrics; keep agents working in few turns, since cost scales with turns).
+- Extras (2026-11-01): owner ticks steps / heart rate / battery / weekday / date / weather on the job form
+  (`studio/extras.py`, `jobs.extras`). The builder draws each one's art in the watch's own style
+  (`manifest.extras` + `build().extras`, CONTRACT "Extras"); package.py adds live text/gauge hands behind a
+  per-extra BooleanConfiguration so the wearer can switch it off. Photo-pose renders hide extras (`extras=0`).

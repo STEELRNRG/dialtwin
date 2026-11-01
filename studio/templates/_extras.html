@@ -1,0 +1,8 @@
+{# tick boxes for owner-chosen extras; expects extra_options and checked (list of ids) #}
+<fieldset class="extras">
+  <legend class="muted">Extras: drawn in this watch's own style, and each can be switched off on the watch</legend>
+  {% for id, (label, hint) in extra_options.items() %}
+  <label class="tick"><input type="checkbox" name="extra" value="{{ id }}" {% if id in checked %}checked{% endif %}>
+    <span>{{ label }}<small>{{ hint }}</small></span></label>
+  {% endfor %}
+</fieldset>

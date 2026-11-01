@@ -1,7 +1,7 @@
 // FIELD 01: an original two-register field watch. Worked example for the Dialtwin engine contract
 // (engine/CONTRACT.md). It shows every feature a typical face needs: two layouts (full dial, or with a
-// painted count-up bezel), colourways, applied indices, live registers, a date window, sweep seconds
-// and an Always-On plate in two tints.
+// painted count-up bezel), colourways, applied indices, live registers, a date window, sweep seconds,
+// an Always-On plate in two tints, and one owner-chosen extra (a day-of-week window).
 //
 // Builds SVG markup for each layer so the same source drives the live preview, the PNG renders the
 // critics look at, and the WFF assets. Coordinates are polar around the dial centre (0,0); the outer
@@ -19,6 +19,7 @@
     idxOuter: 179, idxInner: 147, idxW: 11,
     reg: { dist: 92, r: 40 },
     date: { x: 0, y: 124, w: 38, h: 28 },
+    day: { x: 0, y: -34, w: 46, h: 20 },   // extra: day of week, same frame as the date
     hub: 12,
   };
 
@@ -179,6 +180,15 @@
       `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="3" fill="${p.dateBg}"/>`;
   }
 
+  // An owner-requested extra (manifest.extras) is drawn in the dial's own language: this weekday
+  // window reuses the date window's frame, colours and font, so it reads as part of the watch.
+  function dayFrame(p, aod) {
+    const { x, y, w, h } = G.day;
+    if (aod) return `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="3" fill="none" stroke="${AOD.lumeDim}" stroke-opacity=".6" stroke-width="1.5"/>`;
+    return `<rect x="${x - w / 2 - 2}" y="${y - h / 2 - 2}" width="${w + 4}" height="${h + 4}" rx="4" fill="${p.dateFrame}"/>` +
+      `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="3" fill="${p.dateBg}"/>`;
+  }
+
   function dialBody(p, id) {
     let s = `<circle r="${G.flangeInner + 0.5}" fill="url(#${id}dial)"/>`;
     s += `<circle r="${G.flangeInner}" fill="#808080" filter="url(#${id}grain)"/>`;
@@ -263,6 +273,16 @@
       colors: { slate: P.slate.dateInk, sand: P.sand.dateInk },
       aodColors: { green: '#ff3f9a58', red: '#ff8e2820' },
     },
+    // owner-chosen extras: art comes from build().extras, the engine draws the live text, and the
+    // wearer can switch each one off on the watch
+    extras: [{
+      id: 'day', source: 'weekday', label: 'Day of week',
+      text: {
+        x: G.day.x, y: G.day.y, w: G.day.w, h: G.day.h, size: 13, font: 'Oxanium.ttf',
+        colors: { slate: P.slate.dateInk, sand: P.sand.dateInk },
+        aodColors: { green: '#ff3f9a58', red: '#ff8e2820' },
+      },
+    }],
     photoLayout: 'bezel',
     photoPose: { time: '10:09:30' },
     previewTime: '10:09:30',
@@ -283,6 +303,8 @@
       aod: svg(aodPlate(p, id)),
       hands: hands(p, id, false),
       aodHands: hands(p, id, true),
+      extras: { day: svg(dayFrame(p, false)) },
+      aodExtras: { day: svg(dayFrame(p, true)) },
     };
   }
 

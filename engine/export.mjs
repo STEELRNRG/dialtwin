@@ -1,5 +1,6 @@
 // Exports every WFF layer as a transparent 480x480 PNG into build/assets/:
-//   <variant>__<layout>__plate.png, __plate_aod_<tint>.png, __<hand>.png, __<hand>_aod_<tint>.png, __preview.png
+//   <variant>__<layout>__plate.png, __plate_aod_<tint>.png, __<hand>.png, __<hand>_aod_<tint>.png, __preview.png,
+//   __x_<extra>.png, __x_<extra>_aod_<tint>.png (extras' art; empty when the face draws none)
 // (double underscores so ids may contain single underscores)
 import path from 'path';
 import fs from 'fs';
@@ -18,9 +19,11 @@ for (const v of M.variants) {
     const p = `${v.id}__${lay.id}__`;
     await shot({ ...base, layer: 'plate' }, f(`${p}plate.png`));
     for (const h of M.hands) await shot({ ...base, layer: h.id }, f(`${p}${h.id}.png`));
+    for (const e of M.extras || []) await shot({ ...base, layer: `x_${e.id}` }, f(`${p}x_${e.id}.png`));
     for (const tint of M.aodTints) {
       await shot({ ...base, layer: 'plate', mode: 'aod', aod: tint.id }, f(`${p}plate_aod_${tint.id}.png`));
       for (const id of M.aodHands) await shot({ ...base, layer: id, mode: 'aod', aod: tint.id }, f(`${p}${id}_aod_${tint.id}.png`));
+      for (const e of M.extras || []) await shot({ ...base, layer: `x_${e.id}`, mode: 'aod', aod: tint.id }, f(`${p}x_${e.id}_aod_${tint.id}.png`));
     }
     await shot({ v: v.id, layout: lay.id, t: M.previewTime || '10:09:30', round: '1', frame: '1' }, f(`${p}preview.png`));
   }

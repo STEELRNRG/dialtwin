@@ -50,5 +50,8 @@ Read first (in one turn):
   31 spots via a `dayOfMonth` hand (set `photoPose.day` to the photo's date). Never bake a date into the plate.
 - Keep the real watch's hand lengths and widths even though hands pass over the date or text
   at times; that's normal and critics are told so. Ignore any advice to shorten hands for it.
+- Extras (steps, heart rate, ...) only when the prompt lists OWNER-CHOSEN EXTRAS: follow CONTRACT
+  "Extras" and draw them in this watch's own fonts, colours, frames and register style (FIELD 01's `day`
+  window reuses its date window's frame). Fidelity to the real dial still comes first.
 - Never write outside the job folder except `scratch/`. Don't edit `reference/` or `critiques/`.
 Finish with a short summary: what you changed this round and what you'd do next.
