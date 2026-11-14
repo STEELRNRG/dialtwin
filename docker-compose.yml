@@ -5,6 +5,9 @@ services:
     build: .
     image: dialtwin
     container_name: dialtwin
+    # uvicorn would be PID 1 and never reaps the chrome/adb children the agents spawn,
+    # so zombies pile up (113 after 13 days). tini (init) reaps them.
+    init: true
     # Host networking lets adb find your watch over mDNS (Wireless debugging). Linux only;
     # see the README for Docker Desktop on macOS/Windows.
     network_mode: host
